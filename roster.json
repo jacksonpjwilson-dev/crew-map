@@ -1,0 +1,193 @@
+{
+ "version": 2,
+ "lead": {
+  "id": "jackson",
+  "name": "Jackson",
+  "role": "Head Honcho",
+  "about": "Sets priorities and approves deploys."
+ },
+ "departments": [
+  {
+   "id": "unassigned",
+   "name": "Unassigned",
+   "head": null,
+   "color": "#8A8F98"
+  }
+ ],
+ "bots": [
+  {
+   "id": "bugsy",
+   "name": "Bugsy",
+   "role": "App Tester",
+   "tier": "bot",
+   "dept": "unassigned",
+   "reportsTo": null,
+   "dotted": [],
+   "hidden": false,
+   "shape": "book",
+   "color": "green",
+   "about": "App Tester.",
+   "runs": []
+  },
+  {
+   "id": "cal",
+   "name": "Cal",
+   "role": "Calendar",
+   "tier": "bot",
+   "dept": "unassigned",
+   "reportsTo": "giles",
+   "dotted": [],
+   "hidden": false,
+   "shape": "hexagon",
+   "color": "blue",
+   "about": "Shift calendars (Chartright + EA), schedule, gym times.",
+   "runs": [
+    "00:05"
+   ]
+  },
+  {
+   "id": "felix",
+   "name": "Fix it Felix",
+   "role": "Developer",
+   "tier": "bot",
+   "dept": "unassigned",
+   "reportsTo": "giles",
+   "dotted": [],
+   "hidden": false,
+   "shape": "house",
+   "color": "magenta",
+   "about": "Builds and fixes apps (Logbook, Stack, Briefing, Pantry, Crew Map).",
+   "runs": []
+  },
+  {
+   "id": "giles",
+   "name": "G.I.L.E.S.",
+   "role": "",
+   "tier": "bot",
+   "dept": "unassigned",
+   "reportsTo": null,
+   "dotted": [],
+   "hidden": false,
+   "shape": "shield",
+   "color": "yellow",
+   "about": "Crew member.",
+   "runs": []
+  },
+  {
+   "id": "gram",
+   "name": "Gram",
+   "role": "Games",
+   "tier": "bot",
+   "dept": "unassigned",
+   "reportsTo": null,
+   "dotted": [],
+   "hidden": false,
+   "shape": "sparkle",
+   "color": "green",
+   "about": "Party games.",
+   "runs": []
+  },
+  {
+   "id": "penny",
+   "name": "Penny",
+   "role": "Finance",
+   "tier": "bot",
+   "dept": "unassigned",
+   "reportsTo": null,
+   "dotted": [],
+   "hidden": false,
+   "shape": "gem",
+   "color": "violet",
+   "about": "Bank feed, balances, Stack app.",
+   "runs": [
+    "00:10"
+   ]
+  },
+  {
+   "id": "scout",
+   "name": "Scout",
+   "role": "Pilot Jobs",
+   "tier": "bot",
+   "dept": "unassigned",
+   "reportsTo": null,
+   "dotted": [],
+   "hidden": false,
+   "shape": "teardrop",
+   "color": "cyan",
+   "about": "Finds pilot job prospects.",
+   "runs": [
+    "00:20"
+   ]
+  },
+  {
+   "id": "sunny",
+   "name": "Sunny",
+   "role": "Daily Briefing",
+   "tier": "bot",
+   "dept": "unassigned",
+   "reportsTo": "giles",
+   "dotted": [],
+   "hidden": false,
+   "shape": "cloud",
+   "color": "orange",
+   "about": "Builds and publishes the morning briefing.",
+   "runs": [
+    "01:00"
+   ]
+  }
+ ],
+ "groups": [],
+ "schedule": [
+  {
+   "time": "00:05",
+   "who": [
+    "cal"
+   ],
+   "note": "schedule rebuild"
+  },
+  {
+   "time": "00:10",
+   "who": [
+    "penny"
+   ],
+   "note": "finance sync"
+  },
+  {
+   "time": "00:20",
+   "who": [
+    "scout"
+   ],
+   "note": "pilot job search"
+  },
+  {
+   "time": "01:00",
+   "who": [
+    "sunny"
+   ],
+   "note": "briefing prep"
+  },
+  {
+   "time": "08:00",
+   "who": [
+    "sunny"
+   ],
+   "note": "Briefing to you",
+   "kind": "briefing"
+  },
+  {
+   "time": "Sun 17:30",
+   "who": [],
+   "note": "Department updates to Chief"
+  },
+  {
+   "time": "Sun 18:00",
+   "who": [],
+   "note": "Board meeting (Executives chat)"
+  },
+  {
+   "time": "1st 18:00",
+   "who": [],
+   "note": "Monthly system review"
+  }
+ ]
+}
