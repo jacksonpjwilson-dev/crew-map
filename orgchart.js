@@ -63,3 +63,5 @@ function unfocus(){svg.classList.remove('focus');svg.querySelectorAll('.hl,.sel'
 document.addEventListener('click',()=>{pinned=null;unfocus()});
 })();
 (function(){let z=1;const m=document.getElementById('map');document.querySelectorAll('.zoom button').forEach(b=>b.onclick=e=>{e.stopPropagation();z=Math.min(4,Math.max(1,z+(+b.dataset.z)*.5));m.style.width=(z*100)+'%'})})();
+// self-heal: if a stale cached style.css lacks the org chart rules, reload it fresh
+(function(){const l=document.getElementById('legend');if(l&&getComputedStyle(l).display!=='flex'){const s=document.querySelector('link[rel=stylesheet]');s.href='style.css?r='+Date.now()}})();
