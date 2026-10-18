@@ -29,8 +29,7 @@ remi:['Remi','Planner','square','green',X[0],402,'ops','To-do list, tasks and re
 sunny:['Sunny','Daily Briefing','cloud','orange',X[0],474,'ops','Builds and publishes the morning briefing.'],
 indie:['Indie','Inbox','leaf','cyan',X[0],546,'ops','Triages Gmail, surfaces important mail.'],
 penny:['Penny','Finance','gem','violet',X[1],330,'fin','Bank feed, balances, Stack app.'],
-sally:['Sally','Shopping · formerly Basil','star','lime',X[1],402,'fin','Weekly Costco list (Fri 18:00) from Logbook pantry.'],
-nick:['Nick','Gifts','heart','red',X[1]+18,474,'fin','Gift deadlines and gift spending. Grouped under Sally.'],
+sally:['Sally','Shopping & Gifts','star','lime',X[1],402,'fin','Weekly Costco list from Logbook pantry, plus gift deadlines (took over from Nick).'],
 scout:['Scout','Pilot Jobs','teardrop','cyan',X[2],330,'car','Finds pilot job prospects.'],
 ace:['Ace','Aviation Study','triangle','sky',X[2],402,'car','Aviation study; works with Scout.'],
 margot:['Margot','French','book','pink',X[2],474,'car','French learning.'],
@@ -40,7 +39,7 @@ quinn:['Quinn','Quality Control','circle','teal',X[3],402,'tech','Reads runs.jso
 atlas:['Atlas','Optimization','bolt','indigo',X[3],474,'tech','Reads Penny, Cal, Remi and the Logbook to optimize.'],
 romeo:['Romeo','Guelph Visits','clover','violet',X[4],330,'life','Plans Guelph visits around free time.'],
 gram:['Gram','Games','sparkle','green',X[4],402,'life','Party games.'],
-vinny:['Vinny','Vortex · role TBD','spiral','coral',X[4],474,'life','New bot — role TBD.']};
+stella:['Stella','Stylist','heart','pink',X[4],474,'life','Personal stylist.']};
 const D={ops:['Operations',0,'#4A90E2'],fin:['Finance & Household',1,'#9B5DE5'],car:['Career & Learning',2,'#1BA7A7'],tech:['Tech & Reliability',3,'#E040A0'],life:['Personal & Fun',4,'#3BA55C']};
 const APPS={logbook:['Logbook',300,680],stack:['Stack',460,680],briefing:['Briefing site',620,680],runs:['runs.jsonl',850,620]};
 const FLOWS=[ // from,to,label,color
@@ -49,3 +48,17 @@ const FLOWS=[ // from,to,label,color
 ['runs','quinn','all bots log',C.teal],['quinn','felix','fixes',C.teal],
 ['atlas','penny','reads'],['atlas','cal','reads'],['atlas','remi','reads'],['atlas','logbook','reads'],
 ['sally','logbook','reads'],['ace','scout','study ↔ jobs',null,true],['felix','logbook','maintains'],['felix','stack','maintains'],['felix','briefing','maintains']];
+
+// Live roster (roster.json from the data branch): drops removed bots, picks up renames, adds new bots with defaults.
+const DEPT_OF={}; // optional overrides for new bots: id:'ops'|'fin'|'car'|'tech'|'life'
+function relayout(){for(const k in D){let i=0;for(const id in B)if(B[id][6]===k){B[id][4]=X[D[k][1]];B[id][5]=330+72*i++}}}
+function applyRoster(r){
+ if(!r||!Array.isArray(r.bots)||r.bots.length<5)return false; // sanity guard: ignore broken/empty rosters
+ const live={};r.bots.forEach(b=>{if(b&&b.id&&b.name)live[String(b.id).toLowerCase()]=b});
+ for(const id in B)if(id!=='jackson'&&!live[id])delete B[id];
+ for(const id in live){const b=live[id],role=String(b.role||'').slice(0,40),name=String(b.name).slice(0,30);
+  if(B[id]){B[id][0]=name;if(role)B[id][1]=role}
+  else B[id]=[name,role||'Bot','circle','white',0,0,DEPT_OF[id]||'life',role||'New crew member.']}
+ for(let i=FLOWS.length-1;i>=0;i--){const f=FLOWS[i];if(!(B[f[0]]||APPS[f[0]])||!(B[f[1]]||APPS[f[1]]))FLOWS.splice(i,1)}
+ relayout();return true}
+relayout();

@@ -3,8 +3,13 @@
 import json,re,sys,datetime as dt
 from zoneinfo import ZoneInfo
 TZ=ZoneInfo('America/Toronto'); BUS='/home/box/shared/crew/bus.jsonl'
-BOTS={'chief','cal','remi','sunny','indie','penny','sally','nick','scout','ace','margot','adam','felix','quinn','atlas','romeo','gram','vinny','all'}
-ALIAS={'fix it felix':'felix','basil':'sally','everyone':'all'}
+BOTS={'chief','cal','remi','sunny','indie','penny','sally','scout','ace','margot','adam','felix','quinn','atlas','romeo','gram','stella','all'}
+try:
+    import os; sys.path.insert(0,os.path.dirname(os.path.abspath(__file__))); import build_roster
+    _r={b['id'] for b in build_roster.roster()['bots']}
+    if len(_r)>=5: BOTS=_r|{'all'}
+except Exception: pass
+ALIAS={'fix it felix':'felix','basil':'sally','nick':'sally','everyone':'all'}
 # topics whose details never go on the public page
 PRIVATE=re.compile(r'secur|password|bill|loan|spend|financ|money|bank|salary|pay|budget|guelph|romeo|girlfriend|health|medical',re.I)
 def bot(n):
