@@ -2,9 +2,12 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Crew Map</title><meta name="theme-color" content="#000">
 <link rel="stylesheet" href="style.css"></head><body>
-<header><h1>Crew Map</h1><span class="sub">Jackson's bot crew</span>
-<nav id="modes"><button data-m="rep">Reporting</button><button data-m="flow">Data flow</button><button data-m="both" class="on">Both</button></nav></header>
-<div id="legend"><span><i class="solid"></i>reports to</span><span><i class="dash"></i>data flow</span><span><i class="pill"></i>app</span><span class="hint">Hover or tap a bot</span></div>
-<main id="wrap"><svg id="map" viewBox="-40 10 1300 710" xmlns="http://www.w3.org/2000/svg"></svg></main>
-<div id="card" hidden></div>
-<script src="app.js"></script></body></html>
+<header><div class="top"><h1>Crew Map</h1><span id="status" class="sub">loading…</span></div>
+<nav id="tabs"><button data-v="crew">Crew</button><button data-v="today" class="on">Today</button><button data-v="list">Activity</button></nav></header>
+<main>
+<section id="v-crew" hidden></section>
+<section id="v-today"><p class="hint">Bot-to-bot messages today. Tap a line or a bot.</p><svg id="net" viewBox="0 0 400 400"></svg><div id="todayEmpty" class="empty" hidden>No bot-to-bot messages yet today.</div></section>
+<section id="v-list" hidden><ol id="feed"></ol></section>
+</main>
+<div id="sheet" hidden><div class="sheet-in"><button id="close" aria-label="Close">✕</button><div id="sheetBody"></div></div></div>
+<script src="crew-data.js"></script><script src="app.js"></script></body></html>
