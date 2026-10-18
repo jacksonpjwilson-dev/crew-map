@@ -5,7 +5,7 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',
 const col=id=>B[id]?C[B[id][3]]:'#bbb',nm=id=>id==='all'?'Everyone':B[id]?B[id][0]:id;
 const icon=(id,s=30)=>{const g=mk('svg',{viewBox:'-14 -14 28 28',width:s,height:s});const b=B[id];if(b)mk('path',{d:SH[b[2]],fill:col(id),stroke:col(id),'stroke-width':1},g);else mk('circle',{r:11,fill:'#555'},g);return g};
 // tabs
-document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#tabs button').forEach(x=>x.classList.toggle('on',x===b));['crew','today','list'].forEach(v=>$('#v-'+v).hidden=v!==b.dataset.v);location.hash=b.dataset.v});
+document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#tabs button').forEach(x=>x.classList.toggle('on',x===b));['org','crew','today','list'].forEach(v=>$('#v-'+v).hidden=v!==b.dataset.v);location.hash=b.dataset.v});
 if(location.hash)document.querySelector(`#tabs [data-v="${location.hash.slice(1)}"]`)?.click();
 // crew view (what each bot does)
 (function(){const root=$('#v-crew');const lead=document.createElement('div');lead.className='dept';lead.innerHTML='<h2 style="border-color:#eee">Leadership</h2>';['jackson','chief'].forEach(id=>lead.appendChild(card(id)));root.appendChild(lead);
