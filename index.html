@@ -1,11 +1,11 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Crew Map</title><meta name="theme-color" content="#000000">
-<link rel="icon" href="favicon.svg?v=5" type="image/svg+xml"><link rel="icon" href="favicon-32.png?v=5" sizes="32x32" type="image/png">
-<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=5"><link rel="manifest" href="manifest.webmanifest?v=5">
+<link rel="icon" href="favicon.svg?v=6" type="image/svg+xml"><link rel="icon" href="favicon-32.png?v=6" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=6"><link rel="manifest" href="manifest.webmanifest?v=6">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Crew">
-<link rel="stylesheet" href="style.css?v=5"></head><body>
+<link rel="stylesheet" href="style.css?v=6"></head><body>
 <header><div class="top"><h1>Crew Map</h1><span id="status" class="sub">loading…</span></div>
 <nav id="tabs" class="t4"><button data-v="org" class="on">Org chart</button><button data-v="crew">Crew</button><button data-v="today">Today</button><button data-v="list">Activity</button></nav></header>
 <main>
@@ -17,4 +17,7 @@
 <section id="v-list" hidden><ol id="feed"></ol></section>
 </main>
 <div id="sheet" hidden><div class="sheet-in"><button id="close" aria-label="Close">✕</button><div id="sheetBody"></div></div></div>
-<script src="crew-data.js?v=5"></script><script src="app.js?v=5"></script><script src="orgchart.js?v=5"></script></body></html>
+<script src="crew-data.js?v=6"></script><script>
+(function(){let done=false;const go=()=>{if(done)return;done=true;['app.js?v=6','orgchart.js?v=6'].reduce((p,src)=>p.then(()=>new Promise(res=>{const s=document.createElement('script');s.src=src;s.onload=s.onerror=res;document.body.appendChild(s)})),Promise.resolve())};
+setTimeout(go,2500);fetch('https://raw.githubusercontent.com/jacksonpjwilson-dev/crew-map/data/roster.json?t='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():null).then(j=>{if(!done)applyRoster(j)}).catch(()=>{}).finally(go)})();
+</script></body></html>
