@@ -73,6 +73,7 @@ def build():
     ov = load(OVR, {}) or {}
     exclude = set(map(str.lower, ov.get('exclude', [])))
     alias = {k.lower(): v for k, v in ov.get('ids', {}).items()}
+    uidmap = ov.get('uids') or {}   # agent folder id -> stable bot id, so renames keep styles/overrides
     bots, groups, raw_desc = {}, [], {}
     uid2id = {}
     for d in sorted(glob.glob(os.path.join(AGENTS, '*', ''))):
@@ -87,7 +88,7 @@ def build():
         name, role = split_name(p.get('name'))
         if not name: continue
         role = role or str(p.get('title') or '').strip()
-        bid = alias.get(name.lower()) or re.sub(r'[^a-z0-9]', '', (name.lower().split() or [''])[0]) or 'bot'
+        bid = uidmap.get(uid) or alias.get(name.lower()) or re.sub(r'[^a-z0-9]', '', (name.lower().split() or [''])[0]) or 'bot'
         if bid in exclude: continue
         base, n = bid, 2
         while bid in bots: bid = f'{base}{n}'; n += 1
