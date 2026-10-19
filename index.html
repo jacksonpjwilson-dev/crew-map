@@ -1,23 +1,41 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Crew Map</title><meta name="theme-color" content="#000000">
-<link rel="icon" href="favicon.svg?v=6" type="image/svg+xml"><link rel="icon" href="favicon-32.png?v=6" sizes="32x32" type="image/png">
-<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=6"><link rel="manifest" href="manifest.webmanifest?v=6">
+<title>Crew Map</title><meta name="theme-color" content="#0b0d12">
+<link rel="icon" href="favicon.svg?v=7" type="image/svg+xml"><link rel="icon" href="favicon-32.png?v=7" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=7"><link rel="manifest" href="manifest.webmanifest?v=7">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Crew">
-<link rel="stylesheet" href="style.css?v=6"></head><body>
-<header><div class="top"><h1>Crew Map</h1><span id="status" class="sub">loading…</span></div>
-<nav id="tabs" class="t4"><button data-v="org" class="on">Org chart</button><button data-v="crew">Crew</button><button data-v="today">Today</button><button data-v="list">Activity</button></nav></header>
-<main>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;600;700&family=Fraunces:wght@600;700&family=Source+Sans+3:wght@400;600&family=Poppins:wght@400;600;700&family=Manrope:wght@400;600;800&family=DM+Serif+Display&family=DM+Sans:wght@400;600;700&family=Space+Grotesk:wght@500;700&family=IBM+Plex+Sans:wght@400;600;700&family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;600&family=Cormorant+Garamond:wght@600;700&family=Lato:wght@400;700&display=swap">
+<link rel="stylesheet" href="style.css?v=7">
+<script src="themes.js?v=7"></script>
+<script>/* apply saved theme before first paint */(function(){try{window.TH=Object.assign({cw:'teal',mode:'auto'},JSON.parse(localStorage.getItem('crewmap:theme')||'{}'))}catch(e){window.TH={cw:'teal',mode:'auto'}}})();</script>
+</head><body>
+<header id="hdr"><div class="top"><div class="ttl"><div class="sub" id="status">Loading…</div><h1>Crew Map</h1></div>
+<button class="icon-btn" id="themeBtn" aria-label="Appearance"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.6-.8 1.6-1.6 0-.9-.7-1.3-.7-2.1 0-.9.7-1.6 1.6-1.6H17a4 4 0 0 0 4-4C21 6.8 17 3 12 3Z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="7.5" cy="11" r="1.4" fill="currentColor"/><circle cx="10" cy="7" r="1.4" fill="currentColor"/><circle cx="14.5" cy="7" r="1.4" fill="currentColor"/></svg></button></div>
+</header>
+<nav id="tabs" class="tabbar"><div class="in">
+<button data-v="org" class="on"><svg viewBox="0 0 24 24"><path d="M12 3v5M5 13v-2h14v2M12 8v3" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="9" y="2" width="6" height="5" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="2" y="14" width="6" height="5" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="16" y="14" width="6" height="5" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 13v1" stroke="currentColor" stroke-width="1.8"/><rect x="9" y="14" width="6" height="5" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg><span>Org chart</span></button>
+<button data-v="crew"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3 19c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="17" cy="9" r="2.4" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M16 13.6c3 0 5 1.8 5 4.6" fill="none" stroke="currentColor" stroke-width="1.6"/></svg><span>Crew</span></button>
+<button data-v="today"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="18" cy="5.5" r="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="18" cy="18.5" r="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M7.3 11 15.7 6.6M7.3 13l8.4 4.4" stroke="currentColor" stroke-width="1.8"/></svg><span>Today</span></button>
+<button data-v="list"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span>Activity</span></button>
+</div></nav>
+<main id="app">
+<section id="v-org">
+ <div class="seg" id="orgView"><button data-o="tree">Tree</button><button data-o="map">Map</button></div>
+ <div id="orgTree"></div>
+ <div id="orgMap" hidden>
+  <div class="orgbar"><div class="seg sm" id="modes"><button data-m="rep">Reporting</button><button data-m="flow">Data flow</button><button data-m="both" class="on">Both</button></div>
+  <div class="zoom"><button class="icon-btn sm" data-z="-1" aria-label="Zoom out">−</button><button class="icon-btn sm" data-z="1" aria-label="Zoom in">+</button></div></div>
+  <div id="legend"><span><i></i>reports to</span><span><i class="dot"></i>also works with</span><span><i class="dash"></i>data flow</span><span><i class="pill"></i>app / file</span><span class="lh">Tap a bot</span></div>
+  <div id="wrap" class="card flat"><svg id="map" xmlns="http://www.w3.org/2000/svg"></svg></div>
+ </div>
+ <h2 class="sec">Group chats</h2><div id="groups" class="groups"></div>
+</section>
 <section id="v-crew" hidden></section>
-<section id="v-org"><div class="orgbar"><nav id="modes"><button data-m="rep">Reporting</button><button data-m="flow">Data flow</button><button data-m="both" class="on">Both</button></nav><div class="zoom"><button data-z="-1" aria-label="Zoom out">−</button><button data-z="1" aria-label="Zoom in">+</button></div></div>
-<div id="legend"><span><i class="solid"></i>reports to</span><span><i class="dash"></i>data flow</span><span><i class="pill"></i>app</span><span class="lh">Tap a bot</span></div>
-<div id="wrap"><svg id="map" viewBox="-40 10 1300 710" xmlns="http://www.w3.org/2000/svg"></svg></div><div id="card" hidden></div></section>
-<section id="v-today" hidden><p class="hint">Bot-to-bot messages today. Tap a line or a bot.</p><svg id="net" viewBox="0 0 400 400"></svg><div id="todayEmpty" class="empty" hidden>No bot-to-bot messages yet today.</div></section>
+<section id="v-today" hidden><p class="hint">Bot-to-bot messages today. Tap a line or a bot.</p><div class="card flat"><svg id="net" viewBox="0 0 400 400"></svg><div id="todayEmpty" class="empty" hidden>No bot-to-bot messages yet today.</div></div></section>
 <section id="v-list" hidden><ol id="feed"></ol></section>
 </main>
-<div id="sheet" hidden><div class="sheet-in"><button id="close" aria-label="Close">✕</button><div id="sheetBody"></div></div></div>
-<script src="crew-data.js?v=6"></script><script>
-(function(){let done=false;const go=()=>{if(done)return;done=true;['app.js?v=6','orgchart.js?v=6'].reduce((p,src)=>p.then(()=>new Promise(res=>{const s=document.createElement('script');s.src=src;s.onload=s.onerror=res;document.body.appendChild(s)})),Promise.resolve())};
-setTimeout(go,2500);fetch('https://raw.githubusercontent.com/jacksonpjwilson-dev/crew-map/data/roster.json?t='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():null).then(j=>{if(!done)applyRoster(j)}).catch(()=>{}).finally(go)})();
-</script></body></html>
+<div id="sheet" class="sheet" hidden><div class="sheet-in"><div class="grab"></div><button id="close" class="icon-btn sm" aria-label="Close">✕</button><div id="sheetBody"></div></div></div>
+<script src="crew-data.js?v=7"></script><script src="app.js?v=7"></script>
+</body></html>

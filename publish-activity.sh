@@ -1,10 +1,13 @@
 #!/usr/bin/env bash
-# Builds sanitized activity.json and force-pushes it as the single commit on the orphan 'data' branch,
-# only when the items changed. main/Pages are never touched. Usage: publish-activity.sh [--dry-run]
+# Builds sanitized activity.json + roster.json (bots, departments, reporting lines, group chats, schedule,
+# derived from the Grok Bot profiles on this box by build_roster.py) and force-pushes them as the single commit
+# on the orphan 'data' branch, only when something changed. main/Pages are never touched.
+# Run every 90 s by the loop that /workspace/ops/watchdog.sh keeps alive. Usage: publish-activity.sh [--dry-run]
 set -euo pipefail
+exec 9>/tmp/crew-map-publish.lock; flock -n 9 || exit 0   # never overlap runs
 DIR=$(cd "$(dirname "$0")" && pwd); WORK=/tmp/crew-map-data; REPO=https://github.com/jacksonpjwilson-dev/crew-map.git
 NEW=$(python3 "$DIR/build_activity.py")
-ROSTER=$(python3 "$DIR/build_roster.py" 2>/dev/null || true)
+ROSTER=$(python3 "$DIR/build_roster.py" || { echo "$(date +%H:%M) roster build failed; keeping last roster" >&2; true; })
 if [ "${1:-}" = "--dry-run" ]; then echo "$NEW"; echo "$ROSTER"; exit 0; fi
 if [ ! -d "$WORK/.git" ]; then
   git clone -q --branch data --single-branch "$REPO" "$WORK" 2>/dev/null || { rm -rf "$WORK"; mkdir -p "$WORK"; git -C "$WORK" init -q -b data; git -C "$WORK" remote add origin "$REPO"; }

@@ -1,0 +1,50 @@
+{
+ "_comment": "Hand overrides for things build_roster.py cannot infer from the bot profiles. Everything here is public. Keys are bot ids (first name, lower case).",
+ "exclude": ["vinny", "nick"],
+ "ids": {"fix it felix": "felix"},
+ "names": {},
+ "roles": {},
+ "reportsTo": {"chief": "jackson"},
+ "dept": {},
+ "deptColors": {"operations": "#4A90E2", "finance": "#9B5DE5", "career": "#1BA7A7", "tech": "#E040A0", "personal": "#3BA55C"},
+ "deptOrder": ["operations", "finance", "career", "tech", "personal"],
+ "deptShort": {"operations": "Operations", "finance": "Finance & Household", "career": "Career & Learning", "tech": "Tech & Reliability", "personal": "Personal & Fun"},
+ "style": {
+  "chief": ["shield", "yellow"], "cal": ["hexagon", "blue"], "remi": ["square", "green"], "sunny": ["cloud", "orange"], "indie": ["leaf", "cyan"],
+  "penny": ["gem", "violet"], "sally": ["star", "lime"], "scout": ["teardrop", "cyan"], "ace": ["triangle", "sky"], "margot": ["book", "pink"],
+  "adam": ["diamond", "gold"], "felix": ["house", "magenta"], "quinn": ["circle", "teal"], "atlas": ["bolt", "indigo"], "romeo": ["clover", "violet"],
+  "gram": ["sparkle", "green"], "stella": ["heart", "pink"], "toby": ["spiral", "orange"],
+  "otto": ["crown", "blue"], "fiona": ["crown", "violet"], "clara": ["crown", "teal"], "theo": ["crown", "magenta"], "piper": ["crown", "green"]
+ },
+ "about": {
+  "jackson": "Sets priorities and approves deploys.",
+  "chief": "Runs the crew: Sunday 18:00 board meeting in the Executives chat, monthly system review and the improvement backlog.",
+  "otto": "Keeps the nightly Operations jobs in order and resolves schedule clashes.",
+  "fiona": "Keeps Finance & Household focused on Jackson's goals.",
+  "clara": "Plans study and job-search load around shifts.",
+  "theo": "Prioritizes Felix's backlog and app builds, gets Quinn's issues fixed, keeps experiments honest and AI costs in check.",
+  "piper": "Protects downtime and plans the fun stuff.",
+  "cal": "Shift calendars (Chartright + EA), schedule, gym times.",
+  "remi": "To-do list, tasks and reminders.",
+  "sunny": "Builds and publishes the morning briefing.",
+  "indie": "Triages Gmail, surfaces important mail.",
+  "penny": "Bank feed, balances, Stack app.",
+  "sally": "Weekly Costco list from the pantry and meal plan, plus gift deadlines.",
+  "scout": "Finds pilot job prospects.",
+  "ace": "Aviation study; works with Scout.",
+  "margot": "French learning.",
+  "adam": "Economics and politics digests.",
+  "felix": "Builds and fixes apps (Logbook, Stack, Briefing, Pantry, Crew Map).",
+  "quinn": "Nightly 00:50 check of every routine; flags broken things to Felix.",
+  "atlas": "Weekly Sunday insights from the Logbook, schedule and tasks; runs small experiments.",
+  "toby": "Tracks AI usage and tool costs; suggests ways to cut waste.",
+  "romeo": "Plans visits around free time.",
+  "gram": "Party games.",
+  "stella": "Personal stylist."
+ },
+ "events": [
+  {"time": "Sun 17:30", "who": ["otto", "fiona", "clara", "theo", "piper"], "note": "Department updates to Chief"},
+  {"time": "Sun 18:00", "who": ["chief"], "note": "Board meeting (Executives chat)"},
+  {"time": "1st 18:00", "who": ["chief", "theo"], "note": "Monthly system review"}
+ ]
+}
