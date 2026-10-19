@@ -191,6 +191,21 @@ def build():
     style = ov.get('style') or {}; about = ov.get('about') or {}
     names = ov.get('names') or {}; roles = ov.get('roles') or {}
     sched = parse_schedule(find)
+    # scheduleEdits: {"HH:MM": [{who, note}]} replaces the README rows at that exact time with clearer public wording
+    # (only while the README still has a row at that time, so a moved routine never shows a stale label).
+    edits = ov.get('scheduleEdits') or {}
+    if edits:
+        fixed = []
+        for s in sched:
+            rep = edits.get(s['time'])
+            if isinstance(rep, list) and rep:
+                if any(x is s for x in fixed): continue
+                if s['time'] in [f['time'] for f in fixed]: continue
+                for e in rep:
+                    who = [w for w in e.get('who', []) if w in bots]
+                    if who: fixed.append({'time': s['time'], 'who': who, 'note': clean(e.get('note'), 50)})
+            else: fixed.append(s)
+        sched = fixed
     runs = {}
     for s in sched:
         for w in s['who']: runs.setdefault(w, []).append(s['time'])
@@ -215,7 +230,10 @@ def build():
     if any(b['dept'] == 'unassigned' for b in bots_out):
         dept_out.append({'id': 'unassigned', 'name': 'Unassigned', 'head': None, 'color': '#8A8F98'})
     for e in ov.get('events') or []:
-        sched.append({'time': clean(e.get('time'), 12), 'who': [w for w in e.get('who', []) if w in bots], 'note': clean(e.get('note'), 60)})
+        ev = {'time': clean(e.get('time'), 12), 'who': [w for w in e.get('who', []) if w in bots], 'note': clean(e.get('note'), 60)}
+        if e.get('kind') in ('briefing',): ev['kind'] = e['kind']
+        if e.get('detail'): ev['detail'] = clean(e.get('detail'), 60)
+        sched.append(ev)
     bots_out.sort(key=lambda b: ({'chief': 0, 'head': 1, 'bot': 2}[b['tier']], b['id']))
     return {'version': 2, 'lead': {'id': 'jackson', 'name': 'Jackson', 'role': 'Head Honcho', 'about': clean(about.get('jackson', ''), 160)},
             'departments': dept_out, 'bots': bots_out, 'groups': gchats, 'schedule': sched}

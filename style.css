@@ -69,7 +69,7 @@ h2.sec{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--
 .bot{display:flex;gap:12px;padding:12px 0;border-top:1px solid var(--line)}.bot:first-of-type{border-top:0}
 .bot b{display:block;font-size:15px}.bot .role{color:var(--muted);font-size:13px}.bot p{margin:4px 0 0;font-size:14px}
 .sched .row{display:flex;gap:12px;align-items:flex-start;padding:9px 0;border-top:1px solid var(--line)}.sched .row:first-of-type{border-top:0}
-.sched .tm{flex:none;width:76px;font-weight:700;font-variant-numeric:tabular-nums;font-family:var(--fh)}
+.sched .tm{flex:none;width:96px;line-height:1.15;font-weight:700;font-variant-numeric:tabular-nums;font-family:var(--fh)}
 .sched .who{display:flex;flex-wrap:wrap;gap:6px}.sched .note{font-size:13px;color:var(--muted);margin-top:3px}
 /* groups */
 .groups{display:grid;gap:10px}@media(min-width:700px){.groups{grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}}
@@ -125,3 +125,8 @@ label.f{display:block;font-size:13px;color:var(--muted);margin:14px 0 6px;font-w
 .ver{color:var(--muted);font-size:12px;text-align:center;margin-top:16px}
 @keyframes up{from{transform:translateY(30px);opacity:.4}}@keyframes fade{from{opacity:0}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+.sched .tm .dl{display:block;font-size:11.5px;font-weight:600;color:var(--muted);font-family:inherit;letter-spacing:.01em}
+.sched .sgrp{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:12px 0 2px;border-top:1px solid var(--line)}.sched h2+.sgrp{border-top:0;padding-top:2px}
+.sched .sgrp+.row{border-top:0}
+.sched .rp{opacity:.8}

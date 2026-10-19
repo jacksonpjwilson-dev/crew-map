@@ -342,9 +342,7 @@
    "tier": "bot",
    "dept": "personal",
    "reportsTo": "piper",
-   "dotted": [
-    "fiona"
-   ],
+   "dotted": [],
    "hidden": false,
    "shape": "heart",
    "color": "pink",
@@ -379,6 +377,20 @@
    "shape": "spiral",
    "color": "orange",
    "about": "Tracks AI usage and tool costs; suggests ways to cut waste.",
+   "runs": []
+  },
+  {
+   "id": "tower",
+   "name": "Tower",
+   "role": "YKF Arrivals",
+   "tier": "bot",
+   "dept": "tech",
+   "reportsTo": "theo",
+   "dotted": [],
+   "hidden": false,
+   "shape": "square",
+   "color": "green",
+   "about": "YKF Arrivals. Tech & Reliability department. Reports to Theo.",
    "runs": []
   }
  ],
@@ -459,7 +471,7 @@
    "who": [
     "cal"
    ],
-   "note": "schedule"
+   "note": "schedule rebuild"
   },
   {
    "time": "00:10",
@@ -480,7 +492,7 @@
    "who": [
     "scout"
    ],
-   "note": "pilot jobs"
+   "note": "pilot job search"
   },
   {
    "time": "00:30",
@@ -492,24 +504,38 @@
   {
    "time": "00:40",
    "who": [
-    "sally",
+    "sally"
+   ],
+   "note": "grocery & gift check · pings you only with news"
+  },
+  {
+   "time": "00:40",
+   "who": [
     "romeo"
    ],
-   "note": "news only"
+   "note": "Guelph visit check-in · pings you only with news"
   },
   {
    "time": "00:50",
    "who": [
     "quinn"
    ],
-   "note": "reliability check of runs.jsonl"
+   "note": "crew reliability check"
   },
   {
    "time": "01:00",
    "who": [
     "sunny"
    ],
-   "note": "daily briefing"
+   "note": "briefing prep"
+  },
+  {
+   "time": "08:00",
+   "who": [
+    "sunny"
+   ],
+   "note": "Briefing to you",
+   "kind": "briefing"
   },
   {
    "time": "Sun 17:30",

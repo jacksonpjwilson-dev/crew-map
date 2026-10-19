@@ -162,6 +162,14 @@
  },
  "events": [
   {
+   "time": "08:00",
+   "who": [
+    "sunny"
+   ],
+   "note": "Briefing to you",
+   "kind": "briefing"
+  },
+  {
    "time": "Sun 17:30",
    "who": [
     "otto",
@@ -187,5 +195,53 @@
    ],
    "note": "Monthly system review"
   }
- ]
+ ],
+ "scheduleEdits": {
+  "00:05": [
+   {
+    "who": [
+     "cal"
+    ],
+    "note": "schedule rebuild"
+   }
+  ],
+  "00:20": [
+   {
+    "who": [
+     "scout"
+    ],
+    "note": "pilot job search"
+   }
+  ],
+  "00:40": [
+   {
+    "who": [
+     "sally"
+    ],
+    "note": "grocery & gift check · pings you only with news"
+   },
+   {
+    "who": [
+     "romeo"
+    ],
+    "note": "Guelph visit check-in · pings you only with news"
+   }
+  ],
+  "00:50": [
+   {
+    "who": [
+     "quinn"
+    ],
+    "note": "crew reliability check"
+   }
+  ],
+  "01:00": [
+   {
+    "who": [
+     "sunny"
+    ],
+    "note": "briefing prep"
+   }
+  ]
+ }
 }

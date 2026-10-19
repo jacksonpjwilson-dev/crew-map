@@ -1,5 +1,6 @@
 /* Crew Map v4. Roster + activity are fetched live from the data branch (rebuilt on the box every 90 s). */
-const VERSION='v4';
+const VERSION='v5';
+const SCHED=()=>window.CrewSched?CrewSched.list(R&&R.schedule):[];
 const RAW='https://raw.githubusercontent.com/jacksonpjwilson-dev/crew-map/data/';
 const LOCAL=/^(localhost|127\.)/.test(location.hostname);
 const ROSTER_URLS=LOCAL?['roster.json']:[RAW+'roster.json','roster.json'],DATA_URLS=LOCAL?['activity.json']:[RAW+'activity.json','activity.json'];
@@ -63,14 +64,14 @@ const flowsOf=id=>FLOWS.filter(f=>(f[0]===id||f[1]===id)&&(isBot(f[0])||APPS[f[0
 function botSheet(id){const b=BOT[id];if(!b)return;const d=DEP[b.dept];
  const boss=b.reportsTo?nm(b.reportsTo):'—',kids=Object.values(BOT).filter(x=>x.reportsTo===id).map(x=>x.id);
  const fl=flowsOf(id),outs=fl.filter(f=>f[0]===id).map(f=>`${esc(nm(f[1]))} <span class="sub">(${esc(f[2])})</span>`),ins=fl.filter(f=>f[1]===id).map(f=>`${esc(nm(f[0]))} <span class="sub">(${esc(f[2])})</span>`);
- const sch=(R.schedule||[]).filter(s=>s.who.includes(id)),grp=groupsOf(id);
+ const sch=SCHED().filter(s=>s.who.includes(id)),grp=groupsOf(id);
  const row=(k,v)=>v?`<div class="kv"><b>${k}</b><div>${v}</div></div>`:'';
  openSheet('bot',`<h3>${av(id)}${esc(b.name)}${b.hidden?'<span class="tag">hidden</span>':''}</h3><div class="r">${esc(b.role)}${d&&d.id!=='exec'?' · '+esc(d.name):b.tier==='head'||b.tier==='chief'?' · Executives':''}</div>
  ${b.about?`<p style="margin:0 0 10px">${esc(b.about)}</p>`:''}
  ${row('Reports to',id==='jackson'?'—':esc(boss))}${row(b.tier==='head'||id==='chief'||id==='jackson'?'Leads':'Manages',kids.length?kids.map(k=>esc(nm(k))).join(', '):'')}
  ${row('Also with',(b.dotted||[]).map(k=>esc(nm(k))).join(', '))}
  ${row('Group chats',grp.map(g=>esc(g.name)).join(', '))}
- ${row('Schedule',sch.map(s=>`<b>${esc(s.time)}</b> ${esc(s.note)}`).join('<br>'))}
+ ${row('Schedule',sch.map(s=>`<b>${esc(s.when)}</b> ${esc(s.note)}`).join('<br>'))}
  ${row('Sends to',outs.length?'<ul><li>'+outs.join('</li><li>')+'</li></ul>':'')}${row('Gets from',ins.length?'<ul><li>'+ins.join('</li><li>')+'</li></ul>':'')}`)}
 function groupSheet(g){openSheet('group',`<h3>${esc(g.name)}</h3><div class="r">Group chat · ${g.members.length} members</div>${g.members.map(id=>`<div class="node-row" data-bot="${esc(id)}">${av(id)}<div class="grow"><div class="t">${esc(nm(id))}</div><div class="s">${esc(BOT[id]?.role||'')}</div></div><span class="chev">›</span></div>`).join('')}`);
  $$('#sheetBody [data-bot]').forEach(x=>x.onclick=()=>botSheet(x.dataset.bot))}
@@ -149,10 +150,11 @@ function drawGroups(){const el=$('#groups'),gs=R.groups||[];
 
 /* ---------- crew tab ---------- */
 function drawCrew(){const root=$('#v-crew');const lb=x=>nm(x);
- const card=id=>{const b=BOT[id],fl=flowsOf(id).map(f=>f[0]===id?`→ ${lb(f[1])}: ${f[2]}`:`← ${lb(f[0])}: ${f[2]}`),sch=(R.schedule||[]).filter(s=>s.who.includes(id)).map(s=>`🕒 ${s.time}`);
+ const card=id=>{const b=BOT[id],fl=flowsOf(id).map(f=>f[0]===id?`→ ${lb(f[1])}: ${f[2]}`:`← ${lb(f[0])}: ${f[2]}`),sch=SCHED().filter(s=>s.who.includes(id)).map(s=>`🕒 ${s.when}`);
   return `<div class="bot" data-bot="${esc(id)}">${av(id)}<div style="min-width:0"><b style="color:${col(id)}">${esc(b.name)}${b.hidden?'<span class="tag">hidden</span>':''}</b><span class="role">${esc(b.role)}</span><p>${esc(b.about)}</p>${sch.length||fl.length?`<div class="chips">${sch.map(x=>`<span class="chip acc">${esc(x)}</span>`).join('')}${fl.map(x=>`<span class="chip">${esc(x)}</span>`).join('')}</div>`:''}</div></div>`};
- let h='';const sch=R.schedule||[];
- if(sch.length)h+=`<div class="card sched"><h2>Crew schedule <small>Ontario time</small></h2>${sch.map(s=>`<div class="row"><div class="tm">${esc(s.time)}</div><div><div class="who">${s.who.map(w=>`<span class="chip" style="color:${col(w)}">${esc(nm(w))}</span>`).join('')}</div><div class="note">${esc(s.note)}</div></div></div>`).join('')}</div>`;
+ let h='';const sch=SCHED();let lastG='';
+ if(sch.length)h+=`<div class="card sched"><h2>Crew schedule <small>next up first · Ontario time</small></h2>${sch.map(s=>{const g=s.group!==lastG?`<div class="sgrp">${esc(s.group)}</div>`:'';lastG=s.group;
+  return `${g}<div class="row"><div class="tm">${s.label!==s.group?`<span class="dl">${esc(s.label)}</span>`:''}${esc(s.clock)}</div><div><div class="who">${s.who.map(w=>`<span class="chip" style="color:${col(w)}">${esc(nm(w))}</span>`).join('')}</div><div class="note">${esc(s.note)} · <span class="rp">${esc(CrewSched.rep(s))}</span></div></div></div>`}).join('')}</div>`;
  h+=`<div class="card"><h2>Leadership</h2>${['jackson','chief'].filter(isBot).map(card).join('')}</div>`;
  (R.departments||[]).forEach(d=>{const ids=(d.head?[d.head]:[]).concat(deptBots(d.id).map(b=>b.id)).filter(isBot);if(!ids.length)return;
   h+=`<div class="card dept" style="--dc:${d.color}"><h2><span style="color:${d.color}">${esc(d.name)}</span><small>${ids.length} bots</small></h2>${ids.map(card).join('')}</div>`});
@@ -192,4 +194,4 @@ async function load(){
  const a=await getJSON(DATA_URLS);if(a&&Array.isArray(a.items)){const s=JSON.stringify(a);ACT=a;if(s!==lastAct){lastAct=s;if(R){drawNet(a.items);drawList(a.items)}}}
  if(R)status();else $('#status').textContent='offline – retrying';if(!a&&R)$('#status').textContent=`offline – retrying · ${R.bots.length} bots`}
 setOrg(orgMode);show(['org','crew','today','list'].includes(location.hash.slice(1))?location.hash.slice(1):'org');
-load();setInterval(load,60000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)load()});
+load();setInterval(load,60000);setInterval(()=>{if(R)drawCrew()},60000);const shTick=()=>window.CrewSched&&CrewSched.loadShifts().then(x=>{if(x&&R)drawCrew()});shTick();setInterval(shTick,30*60e3);document.addEventListener('visibilitychange',()=>{if(!document.hidden)load()});

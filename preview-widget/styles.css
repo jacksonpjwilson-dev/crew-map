@@ -258,7 +258,7 @@ label.f{display:block;font-size:13px;color:var(--muted);margin:10px 0 4px}
 .hero>*{position:relative}.hero .big{font-size:26px}
 .dbadge{flex:none;width:56px;height:56px;border-radius:18px;display:flex;align-items:center;justify-content:center;color:#fff}.dbadge.sm{width:40px;height:40px;border-radius:13px}
 .bar{height:6px;background:var(--card2);border-radius:99px;overflow:hidden;margin-top:6px}.bar i{display:block;height:100%;border-radius:99px}
-.srow{display:flex;gap:12px;padding:9px 0;border-top:1px solid var(--line)}.srow:first-of-type{border-top:0}.srow>b{flex:none;width:78px;font-family:var(--fh);font-variant-numeric:tabular-nums}
+.srow{display:flex;gap:12px;padding:9px 0;border-top:1px solid var(--line)}.srow:first-of-type{border-top:0}.srow>b{flex:none;width:100px;line-height:1.15;font-family:var(--fh);font-variant-numeric:tabular-nums}
 .schips{display:flex;flex-wrap:wrap;gap:6px}.chip{border:0;font-size:12.5px;font-weight:700;background:var(--card2);border-radius:99px;padding:4px 10px;cursor:pointer}
 .gitemc{padding:12px 14px!important;margin-bottom:10px;border:1px solid var(--line)!important;border-radius:var(--r)!important;background:var(--card)!important;align-items:center}
 .gitemc .cstack{margin-top:8px}
@@ -283,3 +283,7 @@ h2.sec{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--
 .M .wbars{display:grid;grid-template-columns:1fr 1fr;column-gap:14px;row-gap:4px}.M .wbars span{font-size:12.5px}
 .S .wbot{flex-direction:row;align-items:center;gap:8px;margin-top:8px}.S .wbot .cav{width:30px!important;height:30px!important;flex:none}
 .S .wbig{margin:4px 0 2px}.S .wbig .cav{width:34px!important;height:34px!important}
+
+.srow>b .dl{display:block;font-size:11.5px;font-weight:600;color:var(--muted);font-family:inherit}
+.sgrp{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:12px 0 2px;border-top:1px solid var(--line)}h2+.sgrp{border-top:0;padding-top:2px}.sgrp+.srow{border-top:0}
+.kv em.rp{font-style:normal;font-size:12px;opacity:.75}
