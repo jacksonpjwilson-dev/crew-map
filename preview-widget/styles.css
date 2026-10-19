@@ -281,3 +281,5 @@ h2.sec{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--
 
 .S .wbot{gap:4px;margin-top:4px}.S .wbot small{font-size:11.5px}.compact .S .wbot .cav{width:28px!important;height:28px!important}
 .M .wbars{display:grid;grid-template-columns:1fr 1fr;column-gap:14px;row-gap:4px}.M .wbars span{font-size:12.5px}
+.S .wbot{flex-direction:row;align-items:center;gap:8px;margin-top:8px}.S .wbot .cav{width:30px!important;height:30px!important;flex:none}
+.S .wbig{margin:4px 0 2px}.S .wbig .cav{width:34px!important;height:34px!important}

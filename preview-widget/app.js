@@ -1,6 +1,6 @@
 /* Crew Map — widget-home preview. LIVE public data: roster.json + activity.json from the data branch,
    rebuilt every 90 s on the box from the bots in Grok Bot. Nothing here can change any bot. */
-const PREVIEW_VER='c1';
+const PREVIEW_VER='c2';
 (function(){
 'use strict';
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
