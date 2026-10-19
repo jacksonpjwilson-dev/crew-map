@@ -1,20 +1,138 @@
 {
  "_comment": "Hand overrides for things build_roster.py cannot infer from the bot profiles. Everything here is public. Keys are bot ids (first name, lower case).",
- "exclude": ["vinny", "nick"],
- "ids": {"fix it felix": "felix"},
+ "exclude": [
+  "vinny",
+  "nick"
+ ],
+ "ids": {
+  "fix it felix": "felix"
+ },
  "names": {},
  "roles": {},
- "reportsTo": {"chief": "jackson"},
- "dept": {},
- "deptColors": {"operations": "#4A90E2", "finance": "#9B5DE5", "career": "#1BA7A7", "tech": "#E040A0", "personal": "#3BA55C"},
- "deptOrder": ["operations", "finance", "career", "tech", "personal"],
- "deptShort": {"operations": "Operations", "finance": "Finance & Household", "career": "Career & Learning", "tech": "Tech & Reliability", "personal": "Personal & Fun"},
+ "reportsTo": {
+  "chief": "jackson",
+  "stella": "piper"
+ },
+ "dept": {
+  "stella": "personal"
+ },
+ "dotted": {
+  "stella": []
+ },
+ "deptColors": {
+  "operations": "#4A90E2",
+  "finance": "#9B5DE5",
+  "career": "#1BA7A7",
+  "tech": "#E040A0",
+  "personal": "#3BA55C"
+ },
+ "deptOrder": [
+  "operations",
+  "finance",
+  "career",
+  "tech",
+  "personal"
+ ],
+ "deptShort": {
+  "operations": "Operations",
+  "finance": "Finance & Household",
+  "career": "Career & Learning",
+  "tech": "Tech & Reliability",
+  "personal": "Personal & Fun"
+ },
  "style": {
-  "chief": ["shield", "yellow"], "cal": ["hexagon", "blue"], "remi": ["square", "green"], "sunny": ["cloud", "orange"], "indie": ["leaf", "cyan"],
-  "penny": ["gem", "violet"], "sally": ["star", "lime"], "scout": ["teardrop", "cyan"], "ace": ["triangle", "sky"], "margot": ["book", "pink"],
-  "adam": ["diamond", "gold"], "felix": ["house", "magenta"], "quinn": ["circle", "teal"], "atlas": ["bolt", "indigo"], "romeo": ["clover", "violet"],
-  "gram": ["sparkle", "green"], "stella": ["heart", "pink"], "toby": ["spiral", "orange"],
-  "otto": ["crown", "blue"], "fiona": ["crown", "violet"], "clara": ["crown", "teal"], "theo": ["crown", "magenta"], "piper": ["crown", "green"]
+  "chief": [
+   "shield",
+   "yellow"
+  ],
+  "cal": [
+   "hexagon",
+   "blue"
+  ],
+  "remi": [
+   "square",
+   "green"
+  ],
+  "sunny": [
+   "cloud",
+   "orange"
+  ],
+  "indie": [
+   "leaf",
+   "cyan"
+  ],
+  "penny": [
+   "gem",
+   "violet"
+  ],
+  "sally": [
+   "star",
+   "lime"
+  ],
+  "scout": [
+   "teardrop",
+   "cyan"
+  ],
+  "ace": [
+   "triangle",
+   "sky"
+  ],
+  "margot": [
+   "book",
+   "pink"
+  ],
+  "adam": [
+   "diamond",
+   "gold"
+  ],
+  "felix": [
+   "house",
+   "magenta"
+  ],
+  "quinn": [
+   "circle",
+   "teal"
+  ],
+  "atlas": [
+   "bolt",
+   "indigo"
+  ],
+  "romeo": [
+   "clover",
+   "violet"
+  ],
+  "gram": [
+   "sparkle",
+   "green"
+  ],
+  "stella": [
+   "heart",
+   "pink"
+  ],
+  "toby": [
+   "spiral",
+   "orange"
+  ],
+  "otto": [
+   "crown",
+   "blue"
+  ],
+  "fiona": [
+   "crown",
+   "violet"
+  ],
+  "clara": [
+   "crown",
+   "teal"
+  ],
+  "theo": [
+   "crown",
+   "magenta"
+  ],
+  "piper": [
+   "crown",
+   "green"
+  ]
  },
  "about": {
   "jackson": "Sets priorities and approves deploys.",
@@ -43,8 +161,31 @@
   "stella": "Personal stylist."
  },
  "events": [
-  {"time": "Sun 17:30", "who": ["otto", "fiona", "clara", "theo", "piper"], "note": "Department updates to Chief"},
-  {"time": "Sun 18:00", "who": ["chief"], "note": "Board meeting (Executives chat)"},
-  {"time": "1st 18:00", "who": ["chief", "theo"], "note": "Monthly system review"}
+  {
+   "time": "Sun 17:30",
+   "who": [
+    "otto",
+    "fiona",
+    "clara",
+    "theo",
+    "piper"
+   ],
+   "note": "Department updates to Chief"
+  },
+  {
+   "time": "Sun 18:00",
+   "who": [
+    "chief"
+   ],
+   "note": "Board meeting (Executives chat)"
+  },
+  {
+   "time": "1st 18:00",
+   "who": [
+    "chief",
+    "theo"
+   ],
+   "note": "Monthly system review"
+  }
  ]
 }

@@ -166,6 +166,7 @@ def build():
     # --- assign
     dov = {k.lower(): v for k, v in (ov.get('dept') or {}).items()}
     rov = {k.lower(): v for k, v in (ov.get('reportsTo') or {}).items()}
+    dtov = {k.lower(): v for k, v in (ov.get('dotted') or {}).items()}
     chief = 'chief' if 'chief' in bots else None
     out = []
     for bid, b in bots.items():
@@ -182,6 +183,7 @@ def build():
         if tier == 'bot' and not dept: boss = boss if boss in bots else None
         if tier == 'chief': boss = boss or 'jackson'
         dotted = sorted(x for x in also.get(bid, ()) if dept is None or depts.get(dept, {}).get('head') != x)
+        if bid in dtov: dotted = sorted(dtov[bid])
         b.update({'tier': tier, 'dept': dept or ('exec' if tier in ('chief', 'head') else 'unassigned'), 'reportsTo': boss, 'dotted': dotted})
         out.append(b)
 
