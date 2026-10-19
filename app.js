@@ -1,9 +1,12 @@
 /* Crew Map v4. Roster + activity are fetched live from the data branch (rebuilt on the box every 90 s). */
-const VERSION='v5';
+const VERSION='v6';
 const SCHED=()=>window.CrewSched?CrewSched.list(R&&R.schedule):[];
 const RAW='https://raw.githubusercontent.com/jacksonpjwilson-dev/crew-map/data/';
 const LOCAL=/^(localhost|127\.)/.test(location.hostname);
 const ROSTER_URLS=LOCAL?['roster.json']:[RAW+'roster.json','roster.json'],DATA_URLS=LOCAL?['activity.json']:[RAW+'activity.json','activity.json'];
+const PRIVATE=!!((window.CREW_CFG||{}).PRIVATE||/[?&]private=1\b/.test(location.search));
+// private mode: read crewMap/{roster|activity} from Firestore ({data:...}) instead of the public data branch
+async function getPriv(kind,ok=()=>true){try{const d=await JWAUTH.getDoc('crewMap/'+kind),j=d&&d.data;return j&&ok(j)?j:null}catch(e){console.warn('crewMap',kind,e);return null}}
 const NS='http://www.w3.org/2000/svg',$=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const mk=(t,a,p)=>{const e=document.createElementNS(NS,t);for(const k in a)if(a[k]!=null)e.setAttribute(k,a[k]);p&&p.appendChild(e);return e};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -190,8 +193,9 @@ let lastRoster='',lastAct='',ACT=null;
 function renderRoster(){drawTree();drawMap();drawGroups();drawCrew();if(ACT){drawNet(ACT.items);drawList(ACT.items)}}
 function status(){const nb=R?R.bots.length:0,d=ACT?new Date(ACT.date+'T12:00:00').toLocaleDateString('en-CA',{weekday:'short',month:'short',day:'numeric'}):'';$('#status').textContent=ACT?`${d} · ${ACT.generated} · ${ACT.items.length} msgs · ${nb} bots`:`${nb} bots`}
 async function load(){
- const r=await getJSON(ROSTER_URLS,6000,j=>j&&j.version>=2)||await getJSON(ROSTER_URLS);if(r){const s=JSON.stringify(r);if(s!==lastRoster&&setRoster(r)){lastRoster=s;renderRoster()}}
- const a=await getJSON(DATA_URLS);if(a&&Array.isArray(a.items)){const s=JSON.stringify(a);ACT=a;if(s!==lastAct){lastAct=s;if(R){drawNet(a.items);drawList(a.items)}}}
+ const r=PRIVATE?await getPriv('roster',j=>j&&j.version>=2):(await getJSON(ROSTER_URLS,6000,j=>j&&j.version>=2)||await getJSON(ROSTER_URLS));if(r){const s=JSON.stringify(r);if(s!==lastRoster&&setRoster(r)){lastRoster=s;renderRoster()}}
+ const a=PRIVATE?await getPriv('activity'):await getJSON(DATA_URLS);if(a&&Array.isArray(a.items)){const s=JSON.stringify(a);ACT=a;if(s!==lastAct){lastAct=s;if(R){drawNet(a.items);drawList(a.items)}}}
  if(R)status();else $('#status').textContent='offline – retrying';if(!a&&R)$('#status').textContent=`offline – retrying · ${R.bots.length} bots`}
-setOrg(orgMode);show(['org','crew','today','list'].includes(location.hash.slice(1))?location.hash.slice(1):'org');
-load();setInterval(load,60000);setInterval(()=>{if(R)drawCrew()},60000);const shTick=()=>window.CrewSched&&CrewSched.loadShifts().then(x=>{if(x&&R)drawCrew()});shTick();setInterval(shTick,30*60e3);document.addEventListener('visibilitychange',()=>{if(!document.hidden)load()});
+function startApp(){setOrg(orgMode);show(['org','crew','today','list'].includes(location.hash.slice(1))?location.hash.slice(1):'org');
+load();setInterval(load,60000);setInterval(()=>{if(R)drawCrew()},60000);const shTick=()=>window.CrewSched&&CrewSched.loadShifts().then(x=>{if(x&&R)drawCrew()});shTick();setInterval(shTick,30*60e3);document.addEventListener('visibilitychange',()=>{if(!document.hidden)load()});}
+if(PRIVATE)PrivateGate.open({title:'Crew Map',icon:'apple-touch-icon.png',ownerUid:(window.CREW_CFG||{}).OWNER_UID,probe:'crewMap/roster'}).then(startApp);else startApp();

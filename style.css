@@ -130,3 +130,6 @@ label.f{display:block;font-size:13px;color:var(--muted);margin:14px 0 6px;font-w
 .sched .sgrp{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:12px 0 2px;border-top:1px solid var(--line)}.sched h2+.sgrp{border-top:0;padding-top:2px}
 .sched .sgrp+.row{border-top:0}
 .sched .rp{opacity:.8}
+
+/* sign-in / private gate (jwauth.js) follows the app theme */
+.jwg{--jwg-bg:var(--bg);--jwg-fg:var(--text);--jwg-mut:var(--muted);--jwg-card:var(--card);--jwg-line:var(--line);--jwg-accent:var(--accent)}

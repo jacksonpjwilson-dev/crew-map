@@ -287,3 +287,6 @@ h2.sec{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--
 .srow>b .dl{display:block;font-size:11.5px;font-weight:600;color:var(--muted);font-family:inherit}
 .sgrp{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:12px 0 2px;border-top:1px solid var(--line)}h2+.sgrp{border-top:0;padding-top:2px}.sgrp+.srow{border-top:0}
 .kv em.rp{font-style:normal;font-size:12px;opacity:.75}
+
+/* sign-in / private gate (jwauth.js) follows the app theme */
+.jwg{--jwg-bg:var(--bg);--jwg-fg:var(--text);--jwg-mut:var(--muted);--jwg-card:var(--card);--jwg-line:var(--line);--jwg-accent:var(--accent)}

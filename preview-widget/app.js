@@ -1,6 +1,6 @@
 /* Crew Map — widget-home preview. LIVE public data: roster.json + activity.json from the data branch,
    rebuilt every 90 s on the box from the bots in Grok Bot. Nothing here can change any bot. */
-const PREVIEW_VER='c4';
+const PREVIEW_VER='c5';
 (function(){
 'use strict';
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
@@ -79,6 +79,9 @@ const ic=(k,w=24)=>`<svg viewBox="0 0 24 24" width="${w}" height="${w}" fill="no
 const RAW='https://raw.githubusercontent.com/jacksonpjwilson-dev/crew-map/data/';
 const LOCAL=/^(localhost|127\.)/.test(location.hostname);
 const ROSTER_URLS=LOCAL?['../roster.json']:[RAW+'roster.json','../roster.json'],DATA_URLS=LOCAL?['../activity.json']:[RAW+'activity.json'];
+const PRIVATE=!!((window.CREW_CFG||{}).PRIVATE||/[?&]private=1\b/.test(location.search));
+// private mode: read crewMap/{roster|activity} from Firestore ({data:...}) instead of the public data branch
+async function getPriv(kind,ok=()=>true){try{const d=await JWAUTH.getDoc('crewMap/'+kind),j=d&&d.data;return j&&ok(j)?j:null}catch(e){console.warn('crewMap',kind,e);return null}}
 let R=null,BOT={},DEP={},ACT={date:'',generated:'',items:[]},SYNC=null;
 async function getJSON(urls,ok=()=>true){for(const u of urls){try{const ctl=new AbortController(),t=setTimeout(()=>ctl.abort(),7000);
  const r=await fetch(u+'?t='+Date.now(),{cache:'no-store',signal:ctl.signal});clearTimeout(t);if(r.ok){const j=await r.json();if(ok(j))return j}}catch(e){}}return null}
@@ -86,8 +89,8 @@ function setRoster(r){if(!r||!Array.isArray(r.bots)||r.bots.length<5||!(r.versio
  const L=r.lead||{};BOT.jackson={id:'jackson',name:L.name||'Jackson',role:L.role||'Head Honcho',tier:'lead',dept:'exec',reportsTo:null,shape:'person',color:'white',about:L.about||'',dotted:[],runs:[]};
  r.bots.forEach(b=>{if(b&&b.id)BOT[b.id]=Object.assign({dotted:[],runs:[]},b)});(r.departments||[]).forEach(d=>DEP[d.id]=d);
  (r.groups||[]).forEach(g=>g.slug=g.name.toLowerCase().replace(/[^a-z0-9]+/g,'-'));return true}
-async function loadData(){let ch=false;const r=await getJSON(ROSTER_URLS,j=>j&&j.version>=2);if(r){const s=JSON.stringify(r);if(s!==loadData.r&&setRoster(r)){loadData.r=s;ch=true}}
- const a=await getJSON(DATA_URLS,j=>j&&Array.isArray(j.items));if(a){const s=JSON.stringify(a);if(s!==loadData.a){loadData.a=s;ACT=a;ch=true}}
+async function loadData(){let ch=false;const r=PRIVATE?await getPriv('roster',j=>j&&j.version>=2):await getJSON(ROSTER_URLS,j=>j&&j.version>=2);if(r){const s=JSON.stringify(r);if(s!==loadData.r&&setRoster(r)){loadData.r=s;ch=true}}
+ const a=PRIVATE?await getPriv('activity',j=>j&&Array.isArray(j.items)):await getJSON(DATA_URLS,j=>j&&Array.isArray(j.items));if(a){const s=JSON.stringify(a);if(s!==loadData.a){loadData.a=s;ACT=a;ch=true}}
  if(r||a)SYNC=new Date();return ch}
 
 /* ---------- helpers ---------- */
@@ -357,12 +360,13 @@ function bindOV(el){
 
 /* ---------- welcome ---------- */
 function welcome(){const w=document.createElement('div');w.className='onb';w.innerHTML=`<div class="obmain"><img class="applogo" src="icon-512.png" alt="Crew Map"><h2>Your whole crew.<br>One home screen.</h2><p class="lede">A first look at the new Crew Map, built from widgets that follow the bots you set up in Grok Bot.</p>
- <ul class="obpts"><li><span>${ic('org',18)}</span>Jackson › Chief › department heads › their bots</li><li><span>${ic('swipe',18)}</span>Swipe between pages, swipe up to go home</li><li><span>${ic('hold',18)}</span>Press and hold to add, resize or move widgets</li><li><span>${ic('shield',18)}</span>Read-only and public-safe: no money, links or private details</li></ul></div>
+ <ul class="obpts"><li><span>${ic('org',18)}</span>Jackson › Chief › department heads › their bots</li><li><span>${ic('swipe',18)}</span>Swipe between pages, swipe up to go home</li><li><span>${ic('hold',18)}</span>Press and hold to add, resize or move widgets</li><li><span>${ic('shield',18)}</span>${PRIVATE?'Private: only you can open it, and it never shows money or links':'Read-only and public-safe: no money, links or private details'}</li></ul></div>
  <div class="obfoot"><button class="btn block" data-go>Explore the preview</button><a class="btn ghost block" href="../" style="text-decoration:none">Open the classic map</a></div>`;document.body.appendChild(w);
  w.querySelector('[data-go]').onclick=()=>{localStorage.setItem(K.seen,'1');w.style.transition='opacity .3s,transform .3s';w.style.opacity='0';w.style.transform='scale(1.04)';setTimeout(()=>w.remove(),300)}}
 
 /* ---------- boot ---------- */
 (async function boot(){
+ if(PRIVATE)await PrivateGate.open({title:'Crew Map',icon:'icon-180.png',ownerUid:(window.CREW_CFG||{}).OWNER_UID,probe:'crewMap/roster'});
  $('#app').innerHTML='<div class="splash"><img src="icon-192.png" alt=""><span>Loading crew…</span></div>';
  await loadData();
  if(!R){$('#app').innerHTML='<div class="splash"><img src="icon-192.png" alt=""><span>Can’t reach the crew data right now. Retrying…</span></div>';while(!R){await new Promise(r=>setTimeout(r,8000));await loadData()}}

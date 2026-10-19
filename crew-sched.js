@@ -14,6 +14,8 @@ const fromDay=n=>{const x=new Date(n*864e5);return {y:x.getUTCFullYear(),mo:x.ge
 const dateTxt=day=>{const x=fromDay(day);return `${WD[x.wd]} ${MO[x.mo-1]} ${x.d}`};
 let SH=null,shAt=0; // {early:{dayNo:startMin}, last:dayNo}
 async function loadShifts(){if(SH&&Date.now()-shAt<30*60e3)return SH;
+ const priv=window.CREW_CFG&&(CREW_CFG.PRIVATE||/[?&]private=1\b/.test(location.search));
+ if(priv){try{const d=await JWAUTH.getDoc('crewMap/shifts');if(d&&d.early){SH={early:d.early,last:d.last};shAt=Date.now()}}catch(e){}return SH} // private: only early-shift start times, written by the box
  try{const r=await fetch(SHIFT_URL+'?t='+Math.floor(Date.now()/6e5),{cache:'no-store'});if(!r.ok)throw 0;const j=await r.json(),early={};let last=-1;
   (j.events||[]).forEach(e=>{const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(e.date||''),t=/^(\d{1,2}):(\d{2})$/.exec(e.start||'');if(!m||!t)return;
    const dn=dayNo(+m[1],+m[2],+m[3]),st=+t[1]*60+ +t[2];last=Math.max(last,dn);
