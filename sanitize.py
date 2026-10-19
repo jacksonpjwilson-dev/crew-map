@@ -2,7 +2,7 @@
 import re
 # Message/topic words that make a bus line private (whole message hidden, not just scrubbed).
 PRIVATE=re.compile(r"(?i)\b(secur\w*|passwords?|passcodes?|bills?|loans?|osap|nslsc|bmo|banks?|banking|spend\w*|financ\w*|money|salary|budgets?|"
-  r"payments?|paid|pay|refunds?|subscriptions?|cards?|credit|debit|transactions?|tx|balances?|invoices?|receipts?|taxes|tax|rent|"
+  r"payments?|paid|pay|payworks|payroll|paystubs?|paycheques?|paychecks?|wages?|refunds?|subscriptions?|cards?|credit|debit|transactions?|tx|balances?|invoices?|receipts?|taxes|tax|rent|"
   r"guelph|romeo|girlfriend|health|medical)\b")
 def scrub(t):
     t=str(t or '')
