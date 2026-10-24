@@ -1,6 +1,6 @@
 /* Crew Map — widget-home preview. LIVE public data: roster.json + activity.json from the data branch,
    rebuilt every 90 s on the box from the bots in Grok Bot. Nothing here can change any bot. */
-const PREVIEW_VER='apple-v3-20261024';
+const PREVIEW_VER='crew-vNext-preview';
 (function(){
 'use strict';
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
@@ -9,7 +9,7 @@ const NS='http://www.w3.org/2000/svg';
 const mkE=(t,a,p)=>{const e=document.createElementNS(NS,t);for(const k in a)if(a[k]!=null)e.setAttribute(k,a[k]);p&&p.appendChild(e);return e};
 
 /* ---------- storage ---------- */
-const K={layout:'crewmap-apple-v2:layout',theme:'crewmapw:theme',seen:'crewmap-next:seen',orgv:'crewmap-next:orgv'};
+const K={layout:'crewmap-apple-v4:layout',theme:'crewmapw:theme',seen:'crewmap-next:seen',orgv:'crewmap-next:orgv'};
 const load=(k,f)=>{try{const v=JSON.parse(localStorage.getItem(k)||'null');return v??f()}catch(e){return f()}};
 function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('on'),1800)}
 
@@ -208,12 +208,20 @@ def('msgs',{n:'Messages today',sec:'activity',sz:['S','M'],r:s=>{const h=hourly(
 def('topics',{n:'Top topics',sec:'activity',sz:['M'],r:()=>{const T=topics().slice(0,8);return `${lbl('list','Top topics today')}${T.length?`<div class="wchips">${T.map(([t,n])=>`<span>${esc(t)} <em>${n}</em></span>`).join('')}</div>`:'<div class="empty">Nothing yet</div>'}`},mini:()=>vActivity(true)});
 def('net',{n:'Today’s network',sec:'activity',sz:['L','M'],d:'L',r:s=>`${lbl('share','Who talked to whom')}<div class="wnet">${netSVG(ACT.items,s==='L'?520:520)||'<div class="empty">No messages yet</div>'}</div>`,mini:()=>miniNet()});
 function appleOrgSummary(){
- const ds=DEPTS().slice(0,8);
- return `${lbl('org','Crew structure')}<div class="ios-org">
- <div class="ios-org-chief">${av('chief',24)}<strong>Chief</strong><small>${workspaceBots().length} bots · ${DEPTS().length} departments</small></div>
+ const ds=DEPTS().filter(d=>deptAll(d.id).length>0).slice(0,8);
+ const chiefs=BOT.chief&&inWorkspace('chief');
+ return `${lbl('org','Organization tree')}<div class="ios-org">
+ <div class="ios-org-chief">${chiefs?av('chief',22):ic('crown',19)}<strong>${chiefs?'Chief':'Crew'}</strong><small>${workspaceBots().length} bots in this workspace</small></div>
  <div class="ios-org-rail"></div>
- <div class="ios-org-depts">${ds.map(d=>`<div class="ios-org-dept" style="--dept:${esc(d.color)}"><i></i><span>${esc(d.name)}</span><b>${deptAll(d.id).length}</b></div>`).join('')}</div>
+ <div class="ios-org-depts">${ds.map(d=>{
+ const members=deptAll(d.id);
+ const head=d.head&&BOT[d.head]&&inWorkspace(d.head)?BOT[d.head]:null;
+ const others=members.filter(b=>!head||b.id!==head.id).slice(0,2);
+ return `<div class="ios-org-dept" style="--dept:${esc(d.color)}">
+ <div class="ios-org-heading"><i></i><strong>${esc(d.name)}</strong><b>${members.length}</b></div>
+ <div class="ios-org-people">${head?esc(head.name)+' · ':''}${others.map(b=>esc(b.name)).join(', ')}${members.length>(head?1:0)+others.length?' +more':''}</div>
  </div>`;
+ }).join('')}</div></div>`;
 }
 def('attention',{n:'Needs attention',sec:'home',sz:['S'],r:()=>`${lbl('bell','Attention')}<div class="ios-attn-value">—</div><small>Monitoring not connected</small><small class="mut" style="margin-top:auto">Execution status unavailable</small>`,mini:()=>'<div class="card"><h2>Execution monitoring</h2><p>Actual task failures and successful runs cannot yet be verified. Connect an execution log to enable alerts.</p></div>'});
 def('orgmini',{n:'Crew structure',sec:'org',sz:['L','M'],d:'L',r:s=>s==='L'?appleOrgSummary():`${lbl('org','Crew structure')}<div class="wn">${workspaceBots().length}</div><small>bots across ${DEPTS().length} departments</small>`,tap:()=>openApp('org')});
@@ -336,7 +344,7 @@ const PAGES=[['home','Home'],['org','Bots'],['activity','Activity']];
 const APPV={org:['Org chart',vOrg,'org'],activity:['Activity',()=>vActivity(false),'activity'],depts:['Departments',vDepts,'grid'],groups:['Group chats',vGroups,'chat'],settings:['Settings',vSettings,'settings']};
 const DOCK=['org','activity','settings'];
 let uidN=0;const nid=()=>'w'+Date.now().toString(36)+(uidN++);
-const DEF_LAYOUT=()=>({home:[['status','M'],['next','S'],['attention','S'],['orgmini','L']],org:[['orgmini','L'],['deptsum','M'],['unassigned','S']],activity:[['msgs','M'],['next','M'],['net','L']],depts:[],groups:[]});
+const DEF_LAYOUT=()=>({home:[['status','M'],['next','S'],['attention','S'],['orgmini','L']],org:[['orgmini','L'],['next','M'],['attention','S']],activity:[['msgs','M'],['next','M'],['net','L']],depts:[],groups:[]});
 const AUTO=[];
 function autoList(k){const L=[];if(k==='depts'){DEPTS().forEach(d=>L.push({id:'a-dept:'+d.id,t:'dept:'+d.id,s:'S'}));if(fits([...L,{s:'M'}]))L.push({id:'a-deptsum',t:'deptsum',s:'M'})}
  else{GROUPS().forEach(g=>L.push({id:'a-grp:'+g.slug,t:'grp:'+g.slug,s:'S'}));if(fits([...L,{s:'M'}]))L.push({id:'a-grpsum',t:'grpsum',s:'M'})}
