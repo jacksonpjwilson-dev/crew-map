@@ -9,17 +9,27 @@ const NS='http://www.w3.org/2000/svg';
 const mkE=(t,a,p)=>{const e=document.createElementNS(NS,t);for(const k in a)if(a[k]!=null)e.setAttribute(k,a[k]);p&&p.appendChild(e);return e};
 
 /* ---------- storage ---------- */
-const K={layout:'crewmap-next:layout',theme:'crewmapw:theme',seen:'crewmap-next:seen',orgv:'crewmap-next:orgv'};
+const K={layout:'crewmap-apple-v2:layout',theme:'crewmapw:theme',seen:'crewmap-next:seen',orgv:'crewmap-next:orgv'};
 const load=(k,f)=>{try{const v=JSON.parse(localStorage.getItem(k)||'null');return v??f()}catch(e){return f()}};
 function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('on'),1800)}
 
 /* ---------- colourways (same 12 as Logbook v2, from ../themes.js) ---------- */
 const TH=Object.assign({cw:'teal',mode:'auto'},load(K.theme,()=>({})));
 const isDark=()=>TH.mode==='dark'||(TH.mode==='auto'&&matchMedia('(prefers-color-scheme: dark)').matches);
-function applyTheme(){const dark=isDark(),c=CW[TH.cw]||CW.teal,v=dark?c.Dk:c.L,r=document.documentElement;r.dataset.theme=dark?'dark':'light';
- const mix=(a,b,p)=>`color-mix(in srgb,${a} ${p}%,${b})`;
- const set={'--bg':v.bg,'--card':v.card,'--card2':mix(v.line,v.card,55),'--text':v.fg,'--muted':v.mut,'--line':v.line,'--accent':v.a,'--accent2':v.a2,'--accent3':v.a3,'--on':v.on,'--fh':c.fh,'--fb':c.fb,'--pos':dark?'#3dd68c':'#15995a','--neg':dark?'#ef7a8a':'#d6334a','--warn':dark?'#f0b04a':'#b7770f'};
- for(const k in set)r.style.setProperty(k,set[k]);$$('meta[name=theme-color]').forEach(x=>x.setAttribute('content',v.bg))}
+function applyTheme(){
+ const dark=isDark(),r=document.documentElement;
+ r.dataset.theme=dark?'dark':'light';
+ r.dataset.apple='true';
+ const v=dark?
+ {bg:'#000000',card:'#1c1c1e',card2:'#2c2c2e',fg:'#f5f5f7',mut:'#98989e',line:'#38383a',on:'#ffffff'}:
+ {bg:'#f2f2f7',card:'#ffffff',card2:'#e5e5ea',fg:'#1c1c1e',mut:'#6e6e73',line:'#d1d1d6',on:'#ffffff'};
+ const colors={'--bg':v.bg,'--card':v.card,'--card2':v.card2,'--text':v.fg,'--muted':v.mut,'--line':v.line,
+ '--accent':'#0a84ff','--accent2':'#5ac8fa','--accent3':'#30d158','--on':v.on,
+ '--fh':'-apple-system,BlinkMacSystemFont,system-ui,sans-serif','--fb':'-apple-system,BlinkMacSystemFont,system-ui,sans-serif',
+ '--pos':dark?'#30d158':'#34c759','--neg':dark?'#ff453a':'#ff3b30','--warn':dark?'#ff9f0a':'#ff9500'};
+ for(const [k,val] of Object.entries(colors))r.style.setProperty(k,val);
+ document.querySelectorAll('meta[name=theme-color]').forEach(x=>x.setAttribute('content',v.bg));
+}
 function saveTheme(){localStorage.setItem(K.theme,JSON.stringify(TH));applyTheme()}
 matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',()=>{applyTheme()});
 applyTheme();
@@ -197,7 +207,16 @@ def('busiest',{n:'Busiest today',sec:'home',sz:['S'],r:()=>{const c=counts()[0];
 def('msgs',{n:'Messages today',sec:'activity',sz:['S','M'],r:s=>{const h=hourly(),t=torNow();return `${lbl('activity','Messages today')}<div class="wn ${s==='S'?'':''}">${ACT.items.length}</div>${cols(s==='S'?h.slice(Math.max(0,t.h-11),t.h+1):h,{hl:s==='S'?Math.min(11,t.h):t.h})}`},mini:()=>vActivity(true)});
 def('topics',{n:'Top topics',sec:'activity',sz:['M'],r:()=>{const T=topics().slice(0,8);return `${lbl('list','Top topics today')}${T.length?`<div class="wchips">${T.map(([t,n])=>`<span>${esc(t)} <em>${n}</em></span>`).join('')}</div>`:'<div class="empty">Nothing yet</div>'}`},mini:()=>vActivity(true)});
 def('net',{n:'Today’s network',sec:'activity',sz:['L','M'],d:'L',r:s=>`${lbl('share','Who talked to whom')}<div class="wnet">${netSVG(ACT.items,s==='L'?520:520)||'<div class="empty">No messages yet</div>'}</div>`,mini:()=>miniNet()});
-def('orgmini',{n:'Org chart',sec:'org',sz:['L','M'],d:'L',r:s=>`${lbl('org','Org chart')}${s==='L'?miniTree():`<div class="wsplitn"><div><span>Heads</span><b>${HEADS().length}</b></div><div><span>Bots</span><b>${R.bots.length}</b></div></div>${avStack(HEADS(),6,30)}`}`,tap:()=>openApp('org')});
+function appleOrgSummary(){
+ const ds=DEPTS().slice(0,8);
+ return `${lbl('org','Crew structure')}<div class="ios-org">
+ <div class="ios-org-chief">${av('chief',24)}<strong>Chief</strong><small>${workspaceBots().length} bots · ${DEPTS().length} departments</small></div>
+ <div class="ios-org-rail"></div>
+ <div class="ios-org-depts">${ds.map(d=>`<div class="ios-org-dept" style="--dept:${esc(d.color)}"><i></i><span>${esc(d.name)}</span><b>${deptAll(d.id).length}</b></div>`).join('')}</div>
+ </div>`;
+}
+def('attention',{n:'Needs attention',sec:'home',sz:['S'],r:()=>`${lbl('bell','Attention')}<div class="ios-attn-value">—</div><small>Monitoring not connected</small><small class="mut" style="margin-top:auto">Execution status unavailable</small>`,mini:()=>'<div class="card"><h2>Execution monitoring</h2><p>Actual task failures and successful runs cannot yet be verified. Connect an execution log to enable alerts.</p></div>'});
+def('orgmini',{n:'Crew structure',sec:'org',sz:['L','M'],d:'L',r:s=>s==='L'?appleOrgSummary():`${lbl('org','Crew structure')}<div class="wn">${workspaceBots().length}</div><small>bots across ${DEPTS().length} departments</small>`,tap:()=>openApp('org')});
 def('execs',{n:'Executives',sec:'org',sz:['M'],r:()=>`${lbl('crown','Executives')}<div class="wexec">${['chief',...HEADS()].filter(isBot).map(id=>`<span>${av(id,34)}<b>${esc(short(id))}</b></span>`).join('')}</div>`,mini:()=>miniExecs()});
 def('unassigned',{n:'Unassigned',sec:'org',sz:['S'],r:()=>{const L=deptBots('unassigned');return `${lbl('flag','Unassigned')}<div class="wn">${L.length}</div>${L.length?`<small class="mut">${esc(L.map(b=>b.name).join(', '))}</small>`:'<small class="mut">Every bot has a department</small>'}`},mini:()=>miniUnassigned()});
 def('deptsum',{n:'All departments',sec:'depts',sz:['M','L'],r:s=>`${lbl('grid','Departments')}<div class="wbars">${DEPTS().map(d=>{const n=deptAll(d.id).length;return `<div><span><i style="background:${d.color}"></i>${esc(d.name)}</span><em>${n}</em></div>`}).join('')}</div>`,tap:()=>openApp('depts')});
@@ -317,7 +336,7 @@ const PAGES=[['home','Home'],['org','Bots'],['activity','Activity']];
 const APPV={org:['Org chart',vOrg,'org'],activity:['Activity',()=>vActivity(false),'activity'],depts:['Departments',vDepts,'grid'],groups:['Group chats',vGroups,'chat'],settings:['Settings',vSettings,'settings']};
 const DOCK=['org','activity','settings'];
 let uidN=0;const nid=()=>'w'+Date.now().toString(36)+(uidN++);
-const DEF_LAYOUT=()=>({home:[['status','M'],['next','S'],['busiest','S'],['latest','M'],['msgs','S'],['bot:chief','S']],org:[['orgmini','L'],['execs','M'],['unassigned','S'],['deptsum','M']],activity:[['msgs','M'],['next','M'],['net','L'],['topics','M']],depts:[],groups:[]});
+const DEF_LAYOUT=()=>({home:[['status','M'],['next','S'],['attention','S'],['orgmini','L']],org:[['orgmini','L'],['deptsum','M'],['unassigned','S']],activity:[['msgs','M'],['next','M'],['net','L']],depts:[],groups:[]});
 const AUTO=[];
 function autoList(k){const L=[];if(k==='depts'){DEPTS().forEach(d=>L.push({id:'a-dept:'+d.id,t:'dept:'+d.id,s:'S'}));if(fits([...L,{s:'M'}]))L.push({id:'a-deptsum',t:'deptsum',s:'M'})}
  else{GROUPS().forEach(g=>L.push({id:'a-grp:'+g.slug,t:'grp:'+g.slug,s:'S'}));if(fits([...L,{s:'M'}]))L.push({id:'a-grpsum',t:'grpsum',s:'M'})}
@@ -353,9 +372,17 @@ function render(){if(!R)return;syncDyn();syncLayout();const app=$('#app');
  app.innerHTML=`<div class="sb ${EDIT?'editing':''}" id="sb"><div class="track" id="track">${PAGES.map(pageHTML).join('')}</div></div>
  <div class="dockwrap"><div class="pdots">${PAGES.map((p,i)=>`<button data-pg="${i}" aria-label="${p[1]}" class="${i===SB.cur?'on':''}"><i></i></button>`).join('')}</div><nav class="dock" aria-label="Apps">${DOCK.map(k=>`<button data-app="${k}" aria-label="${APPV[k][0]}"><span class="aico">${ic(APPV[k][2],28)}</span><span>${APPV[k][0]}</span></button>`).join('')}</nav></div>`;
  metrics();go(SB.cur,false);bindSB()}
-function metrics(){const sb=$('#sb'),dw=$('.dockwrap'),gr=$('.page .wgrid');if(!sb||!dw||!gr)return;const vh=VH(),vw=Math.min(VW(),560);
- const g=vh<=700?11:14,fr=FR(),dockTop=dw.getBoundingClientRect().top-fr.top,gridTop=gr.getBoundingClientRect().top-fr.top;const avail=dockTop-gridTop-12;
- const u=Math.floor(Math.max(90,Math.min((vw-32-g)/2,(avail-g*(MAXR-1))/MAXR)));sb.style.setProperty('--u',u+'px');sb.style.setProperty('--g',g+'px');sb.classList.toggle('compact',u<135);SB.W=VW()}
+function metrics(){
+ const sb=$('#sb'),dw=$('.dockwrap'),gr=$('.page .wgrid');
+ if(!sb||!dw||!gr)return;
+ const fr=FR(),dockTop=dw.getBoundingClientRect().top-fr.top,gridTop=gr.getBoundingClientRect().top-fr.top;
+ const avail=Math.max(260,dockTop-gridTop-10),g=VW()<380?9:11;
+ const u=Math.max(55,Math.floor((avail-g*(MAXR-1))/MAXR));
+ sb.style.setProperty('--u',u+'px');
+ sb.style.setProperty('--g',g+'px');
+ sb.classList.toggle('compact',u<130);
+ SB.W=VW();
+}
 function go(i,anim=true){SB.cur=Math.max(0,Math.min(SB.n-1,i));const t=$('#track');if(!t)return;t.style.transition=anim?'transform .38s cubic-bezier(.2,.9,.25,1)':'none';t.style.transform=`translateX(${-SB.cur*SB.W}px)`;$$('.pdots button').forEach((b,j)=>b.classList.toggle('on',j===SB.cur))}
 function setEdit(on){if(EDIT&&!on){LY.custom=LY.custom||{};LY.custom[curKey()]=true;saveLY()}EDIT=on;render()}
 const curKey=()=>PAGES[SB.cur][0];
