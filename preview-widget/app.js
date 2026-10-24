@@ -1,6 +1,6 @@
 /* Crew Map — widget-home preview. LIVE public data: roster.json + activity.json from the data branch,
    rebuilt every 90 s on the box from the bots in Grok Bot. Nothing here can change any bot. */
-const PREVIEW_VER='c5';
+const PREVIEW_VER='crew-vNext-preview';
 (function(){
 'use strict';
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
@@ -190,11 +190,34 @@ function miniBusiest(){const c=counts();return `<div class="card"><h2>Busiest to
 function miniNet(){return `<div class="card"><h2>Who talked to whom <small>today</small></h2><div class="wnet big">${netSVG(ACT.items)||'<div class="empty">No messages yet</div>'}</div><p class="tiny" style="text-align:center">Tap a bot to see its day.</p></div>${openFull('activity','Activity')}`}
 function miniExecs(){return `<div class="card"><h2>Executives <small>board meets Sun 18:00</small></h2>${['chief',...HEADS()].filter(isBot).map(id=>botRow(id,BOT[id].role+(DEP[BOT[id].dept]&&BOT[id].dept!=='exec'?'':''))).join('')}</div>${openFull('org','Org chart')}`}
 function miniUnassigned(){const L=deptBots('unassigned');return `<div class="notice">Bots land here when the map can’t tell which department they belong to. Add them to a department’s group chat in Grok Bot (or name them in the head’s description) and they move within about 2 minutes.</div><div class="card"><h2>Unassigned <small>${L.length}</small></h2>${L.map(b=>botRow(b.id)).join('')||'<div class="empty">Every bot has a department</div>'}</div>`}
-let ORGV=localStorage.getItem(K.orgv)||'tree',ACTV='feed';
-function treeHTML(){let h=`<div class="tlead"><div class="card">${botRow('jackson')}</div><i class="mt-v"></i>${BOT.chief?`<div class="card">${botRow('chief')}</div><i class="mt-v"></i>`:''}</div>`;
- DEPTS().forEach(d=>{const L=deptBots(d.id);h+=`<div class="card tdept" style="--dc:${d.color}"><h2><span style="color:${d.color}">${esc(d.name)}</span><small>${deptAll(d.id).length} bots</small></h2>${d.head&&BOT[d.head]?botRow(d.head):''}<div class="${d.head?'tkids':''}">${L.map(b=>botRow(b.id)).join('')}</div></div>`});return h}
-function vOrg(){return `<div class="seg">${[['tree','Tree'],['map','Map']].map(([k,n])=>`<button class="${ORGV===k?'on':''}" data-orgv="${k}">${n}</button>`).join('')}</div>${ORGV==='tree'?treeHTML():`<div class="card flat mapcard"><svg id="omap" xmlns="${NS}"></svg></div><p class="tiny" style="text-align:center">Solid lines: reports to · dotted: also works with · dashed: data flow. Pinch or scroll to explore, tap a bot.</p>`}
- <h2 class="sec">Group chats</h2>${GROUPS().map(g=>`<button class="item card gitemc" data-grp="${g.slug}">${avStack(g.members,5,26)}<div class="grow"><div class="t">${esc(g.name)}</div><div class="s">${g.members.length} members</div></div><span class="chev">›</span></button>`).join('')}`}
+let ORGV=localStorage.getItem(K.orgv)||'browse',ACTV='feed';
+let FOCUS_ID='chief';
+/* Mobile-first bot directory and focused relationship explorer. */
+function treeHTML(){
+ let h='<div class="card cc-intro"><b>Bot directory</b><p>Expand a department to see its bots. Tap a bot for responsibilities and connections.</p></div>';
+ h+='<div class="cc-leaders">'+botRow('jackson')+(BOT.chief?botRow('chief'):'')+'</div>';
+ DEPTS().forEach(d=>{const people=deptAll(d.id);h+='<details class="cc-dept" style="--dc:'+esc(d.color)+'"><summary><span class="cc-dot"></span><b>'+esc(d.name)+'</b><small>'+people.length+' bots</small><span class="chev">⌄</span></summary><div class="cc-members">'+people.map(b=>botRow(b.id)).join('')+'</div></details>'});
+ return h;
+}
+function focusedHTML(){
+ const target=BOT[FOCUS_ID]||BOT.chief||BOT.jackson;
+ if(!target)return '<div class="empty">No bot selected</div>';
+ const rel=Object.values(BOT).filter(b=>b.reportsTo===target.id);
+ const links=flowsOf(target.id);
+ const related=[...new Set(links.map(f=>f[0]===target.id?f[1]:f[0]))];
+ const opts=Object.values(BOT).filter(b=>b.id!=='jackson').sort((a,b)=>a.name.localeCompare(b.name));
+ return '<div class="card cc-focus"><label class="f" for="crew-focus">Focus on a bot</label><select id="crew-focus" data-focus-select>'+opts.map(b=>'<option value="'+esc(b.id)+'" '+(b.id===target.id?'selected':'')+'>'+esc(b.name)+'</option>').join('')+'</select>'
+ +'<div class="cc-focuslead">'+av(target.id,54)+'<div><b>'+esc(target.name)+'</b><p>'+esc(target.role)+'</p></div></div>'
+ +'<div class="cc-focusgrid"><div><small>Reports to</small><b>'+esc(target.reportsTo?nm(target.reportsTo):'—')+'</b></div><div><small>Direct reports</small><b>'+rel.length+'</b></div><div><small>Connected systems</small><b>'+related.length+'</b></div></div>'
+ +'<h3>Direct reports</h3>'+(rel.map(b=>botRow(b.id)).join('')||'<p class="tiny">No direct reports</p>')
+ +'<h3>Connections</h3>'+(links.map(f=>'<div class="cc-link"><span>'+esc(nm(f[0]))+'</span><span>→ '+esc(f[2])+' →</span><span>'+esc(nm(f[1]))+'</span></div>').join('')||'<p class="tiny">No recorded data flows</p>')
+ +'</div>';
+}
+function vOrg(){
+ return '<div class="seg">'+[['browse','Browse'],['focus','Focus'],['map','Full map']].map(([k,n])=>'<button class="'+(ORGV===k?'on':'')+'" data-orgv="'+k+'">'+n+'</button>').join('')+'</div>'
+ +(ORGV==='browse'?treeHTML():ORGV==='focus'?focusedHTML():'<div class="card flat mapcard"><svg id="omap" xmlns="'+NS+'"></svg></div><p class="tiny" style="text-align:center">Full relationship map · pinch to zoom or scroll to explore. Use Focus for a clearer mobile view.</p>')
+ +'<h2 class="sec">Departments & group chats</h2><details class="cc-dept"><summary><b>Group chats</b><small>'+GROUPS().length+' groups</small><span class="chev">⌄</span></summary><div class="cc-members">'+GROUPS().map(g=>'<button class="item card gitemc" data-grp="'+esc(g.slug)+'">'+avStack(g.members,5,26)+'<div class="grow"><div class="t">'+esc(g.name)+'</div><div class="s">'+g.members.length+' members</div></div><span class="chev">›</span></button>').join('')+'</div></details>';
+}
 function vActivity(feedOnly){const L=[...ACT.items].reverse();return `${feedOnly?'':`<div class="seg">${[['feed','Feed'],['net','Network']].map(([k,n])=>`<button class="${ACTV===k?'on':''}" data-actv="${k}">${n}</button>`).join('')}</div>`}
  ${!feedOnly&&ACTV==='net'?`<div class="card"><div class="wnet big">${netSVG(ACT.items)||'<div class="empty">No messages yet</div>'}</div></div>`:`<div class="card"><h2>${esc(ACT.date||'Today')} <small>${ACT.items.length} messages · ${esc(syncTxt())}</small></h2>${L.map(i=>msgRow(i,ACT.items.indexOf(i))).join('')||'<div class="empty">No bot-to-bot messages yet today.</div>'}</div><p class="tiny" style="text-align:center">Private topics and anything with money, links or numbers are kept off this public page.</p>`}`}
 function vDepts(){return DEPTS().map(d=>`<button class="item card gitemc" data-dept="${d.id}" style="--dc:${d.color}"><span class="dbadge sm" style="background:${d.color}">${ic('grid',18)}</span><div class="grow"><div class="t">${esc(d.name)}</div><div class="s">${d.head?'Head: '+esc(nm(d.head))+' · ':''}${deptAll(d.id).length} bots · ${deptMsgs(d.id).length} msgs today</div>${avStack(deptAll(d.id).map(b=>b.id),8,24)}</div><span class="chev">›</span></button>`).join('')}
@@ -239,12 +262,12 @@ function postOV(el){const m=el.querySelector('#omap');if(m)drawMap(m,id=>{OV={ki
 const openApp=k=>openOV({kind:'app',k},$(`.dock [data-app="${k}"] .aico`)?.getBoundingClientRect());
 
 /* ---------- pages, dock, layout ---------- */
-const PAGES=[['home','Home'],['org','Org chart'],['activity','Activity'],['depts','Departments'],['groups','Group chats']];
+const PAGES=[['home','Home'],['org','Bots'],['activity','Activity']];
 const APPV={org:['Org chart',vOrg,'org'],activity:['Activity',()=>vActivity(false),'activity'],depts:['Departments',vDepts,'grid'],groups:['Group chats',vGroups,'chat'],settings:['Settings',vSettings,'settings']};
-const DOCK=['org','activity','depts','groups','settings'];
+const DOCK=['org','activity','settings'];
 let uidN=0;const nid=()=>'w'+Date.now().toString(36)+(uidN++);
 const DEF_LAYOUT=()=>({home:[['status','M'],['next','S'],['busiest','S'],['latest','M'],['msgs','S'],['bot:chief','S']],org:[['orgmini','L'],['execs','M'],['unassigned','S'],['bot:toby','S']],activity:[['net','L'],['msgs','S'],['busiest','S'],['topics','M']],depts:[],groups:[]});
-const AUTO=['depts','groups'];
+const AUTO=[];
 function autoList(k){const L=[];if(k==='depts'){DEPTS().forEach(d=>L.push({id:'a-dept:'+d.id,t:'dept:'+d.id,s:'S'}));if(fits([...L,{s:'M'}]))L.push({id:'a-deptsum',t:'deptsum',s:'M'})}
  else{GROUPS().forEach(g=>L.push({id:'a-grp:'+g.slug,t:'grp:'+g.slug,s:'S'}));if(fits([...L,{s:'M'}]))L.push({id:'a-grpsum',t:'grpsum',s:'M'})}
  while(L.length&&!fits(L))L.pop();return L}
@@ -349,6 +372,7 @@ function bindOV(el){
   if('editws' in d){closeOV();setTimeout(()=>setEdit(true),380);return}
   if('resetlayout' in d){if(await ui.confirm({title:'Reset widget layout?',message:'Every page goes back to the default widgets. Departments and Group chats follow Grok Bot again.',action:'Reset'})){LY=mkLayout();saveLY();render();toast('Layout reset')}return}
   if('welcome' in d){closeOV();setTimeout(welcome,380);return}});
+ el.addEventListener('change',e=>{if(e.target.matches('[data-focus-select]')){FOCUS_ID=e.target.value;ORGV='focus';drawOV()}});
  // swipe up from the home bar closes; edge swipe right goes back
  let g=null;el.addEventListener('pointerdown',e=>{if(e.target.closest('button,a,input,select,label,textarea'))return;const fr=FR(),y=e.clientY-fr.top,x=e.clientX-fr.left,hb=!!e.target.closest('.homebar')||y>VH()-34,edge=x<20&&!hb;if(!hb&&!edge)return;e.preventDefault();getSelection()?.removeAllRanges();g={x:e.clientX,y:e.clientY,t:performance.now(),hb,pid:e.pointerId};try{el.setPointerCapture(e.pointerId)}catch(_){}el.style.transition='none';el.classList.add('dragging')});
  el.addEventListener('pointermove',e=>{if(!g||e.pointerId!==g.pid)return;if(g.hb){const dy=Math.min(0,e.clientY-g.y),s=Math.max(.55,1-Math.abs(dy)/VH()*.9);el.style.transform=`translateY(${dy*.6}px) scale(${s})`;el.style.transformOrigin='50% 100%';el.style.borderRadius=Math.min(44,Math.abs(dy)/3)+'px';g.d=dy}else{const dx=Math.max(0,e.clientX-g.x);el.style.transform=`translateX(${dx}px)`;g.d=dx}});
