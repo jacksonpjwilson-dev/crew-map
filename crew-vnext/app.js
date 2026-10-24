@@ -93,30 +93,71 @@ async function loadData(){let ch=false;const r=PRIVATE?await getPriv('roster',j=
  const a=PRIVATE?await getPriv('activity',j=>j&&Array.isArray(j.items)):await getJSON(DATA_URLS,j=>j&&Array.isArray(j.items));if(a){const s=JSON.stringify(a);if(s!==loadData.a){loadData.a=s;ACT=a;ch=true}}
  if(r||a)SYNC=new Date();return ch}
 
+/* Workspaces are presentation filters only; they never instantiate or trigger a second bot. */
+const WS_KEY='crewmap-next:workspaces',WS_ACTIVE_KEY='crewmap-next:workspace-active';
+const WORKSPACE_NAMES={all:'All Bots',productivity:'Productivity',learning:'Hobbies & Learning',custom:'My Workspace'};
+let WS_ACTIVE=localStorage.getItem(WS_ACTIVE_KEY)||'all';
+if(!WORKSPACE_NAMES[WS_ACTIVE])WS_ACTIVE='all';
+let WS_CUSTOM=load(WS_KEY,()=>[]);
+function workspaceIds(){
+ const ids=Object.values(BOT).filter(b=>b.id!=='jackson');
+ if(WS_ACTIVE==='all')return new Set(ids.map(b=>b.id));
+ if(WS_ACTIVE==='custom')return new Set(WS_CUSTOM);
+ return new Set(ids.filter(b=>{
+ const department=(DEP[b.dept]?.name||'').toLowerCase();
+ const fields=(department+' '+(b.role||'')+' '+(b.name||'')).toLowerCase();
+ if(WS_ACTIVE==='learning')return /learning|career|study|econom|french|aviation|hobby|fun|shopping|gift|sports|fitness|food|language/.test(fields);
+ return !/learning|study|econom|french|hobby|fun|shopping|gift|sports|fitness|language/.test(fields);
+ }).map(b=>b.id));
+}
+const inWorkspace=id=>id==='jackson'||workspaceIds().has(id);
+const workspaceBots=()=>Object.values(BOT).filter(b=>b.id!=='jackson'&&inWorkspace(b.id));
+const workspaceActivity=()=>ACT.items.filter(x=>inWorkspace(x.from)||inWorkspace(x.to));
+const workspaceSchedule=()=>SCHED().filter(x=>(x.who||[]).some(inWorkspace));
+function changeWorkspace(id){if(!WORKSPACE_NAMES[id])return;WS_ACTIVE=id;localStorage.setItem(WS_ACTIVE_KEY,id);render();toast(WORKSPACE_NAMES[id]+' view');}
+function workspacePicker(){
+ const b=workspaceBots();
+ sheet('<h3>Choose workspace</h3><p class="muted">These are views of the same Grok bots. A bot in multiple views is still only one bot and runs only once.</p>'
+ +Object.entries(WORKSPACE_NAMES).map(([id,label])=>'<button class="cc-ws-choice '+(WS_ACTIVE===id?'active':'')+'" data-workspace="'+id+'"><span>'+esc(label)+'</span><small>'+ (id==='all'?R.bots.length:id==='custom'?WS_CUSTOM.filter(x=>BOT[x]).length:id==='productivity'?'Work':'Learning')+'</small></button>').join('')
+ +'<button class="btn ghost block" data-edit-workspace>Customize My Workspace</button>',el=>{
+ el.querySelectorAll('[data-workspace]').forEach(x=>x.onclick=()=>{changeWorkspace(x.dataset.workspace);closeSheet()});
+ el.querySelector('[data-edit-workspace]').onclick=workspaceEditor;
+ });
+}
+function workspaceEditor(){
+ const selected=new Set(WS_CUSTOM);
+ const list=Object.values(BOT).filter(b=>b.id!=='jackson').sort((a,b)=>a.name.localeCompare(b.name));
+ sheet('<h3>My Workspace</h3><p class="muted">Choose the bots to display. Changes affect only this browser view.</p>'
+ +list.map(b=>'<label class="cc-ws-bot"><input type="checkbox" value="'+esc(b.id)+'" '+(selected.has(b.id)?'checked':'')+'><span>'+esc(b.name)+'</span><small>'+esc(DEP[b.dept]?.name||b.role||'')+'</small></label>').join('')
+ +'<button class="btn block" data-save-workspace>Save workspace</button>',el=>{
+ el.querySelector('[data-save-workspace]').onclick=()=>{WS_CUSTOM=[...el.querySelectorAll('input:checked')].map(x=>x.value);localStorage.setItem(WS_KEY,JSON.stringify(WS_CUSTOM));changeWorkspace('custom');closeSheet()};
+ });
+}
+
 /* ---------- helpers ---------- */
 const col=id=>id==='jackson'?'var(--text)':BOT[id]?(C[BOT[id].color]||BOT[id].color||'#888'):'var(--muted)';
 const nm=id=>id==='all'?'Everyone':BOT[id]?BOT[id].name:APPS[id]||String(id||'?').replace(/^./,c=>c.toUpperCase());
 const short=id=>nm(id).replace('Fix it ','');
 const isBot=id=>!!BOT[id];
-const deptBots=k=>Object.values(BOT).filter(b=>b.dept===k&&b.tier==='bot').sort((a,b)=>a.name.localeCompare(b.name));
-const deptAll=k=>{const d=DEP[k];return (d&&d.head&&BOT[d.head]?[BOT[d.head]]:[]).concat(deptBots(k))};
-const DEPTS=()=>(R.departments||[]).filter(d=>d.head||deptBots(d.id).length);
-const HEADS=()=>DEPTS().map(d=>d.head).filter(isBot);
-const GROUPS=()=>R.groups||[];
+const deptBots=k=>Object.values(BOT).filter(b=>inWorkspace(b.id)&&b.dept===k&&b.tier==='bot').sort((a,b)=>a.name.localeCompare(b.name));
+const deptAll=k=>{const d=DEP[k];return (d&&d.head&&BOT[d.head]&&inWorkspace(d.head)?[BOT[d.head]]:[]).concat(deptBots(k))};
+const DEPTS=()=>(R.departments||[]).filter(d=>deptAll(d.id).some(b=>inWorkspace(b.id)));
+const HEADS=()=>DEPTS().map(d=>d.head).filter(id=>isBot(id)&&inWorkspace(id));
+const GROUPS=()=>(R.groups||[]).filter(g=>(g.members||[]).some(inWorkspace));
 const groupsOf=id=>GROUPS().filter(g=>g.members.includes(id));
-const msgsOf=id=>ACT.items.filter(i=>i.from===id||i.to===id);
-const deptMsgs=k=>{const ids=new Set(deptAll(k).map(b=>b.id));return ACT.items.filter(i=>ids.has(i.from)||ids.has(i.to))};
+const msgsOf=id=>workspaceActivity().filter(i=>i.from===id||i.to===id);
+const deptMsgs=k=>{const ids=new Set(deptAll(k).map(b=>b.id));return workspaceActivity().filter(i=>ids.has(i.from)||ids.has(i.to))};
 function iconSVG(id,size=24){const b=BOT[id]||{shape:'circle'},s=b.shape in SH?b.shape:'circle',c=col(id),so=STROKE_ONLY[s];
  return `<svg viewBox="-14 -14 28 28" width="${size}" height="${size}"><path d="${SH[s]}" style="fill:${so?'none':c};stroke:${c}" stroke-width="${so?2:1}" stroke-linecap="round"/></svg>`}
 const av=(id,sz=40)=>`<span class="cav" style="width:${sz}px;height:${sz}px;background:color-mix(in srgb,${col(id)} 17%,transparent)">${iconSVG(id,Math.round(sz*.6))}</span>`;
 const avStack=(ids,n=6,sz=28)=>`<span class="cstack">${ids.slice(0,n).map(id=>av(id,sz)).join('')}${ids.length>n?`<span class="cmore" style="width:${sz}px;height:${sz}px">+${ids.length-n}</span>`:''}</span>`;
 const torNow=()=>{const p=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Toronto',hour:'2-digit',minute:'2-digit',hour12:false,weekday:'short'}).formatToParts(new Date());const g=t=>p.find(x=>x.type===t)?.value;return {h:+g('hour')%24,m:+g('minute'),wd:g('weekday')}};
 const SCHED=()=>window.CrewSched?CrewSched.list(R&&R.schedule):[];
-function nextRuns(n=3){return SCHED().slice(0,n)}
+function nextRuns(n=3){return workspaceSchedule().slice(0,n)}
 const inTxt=m=>window.CrewSched?CrewSched.inTxt(m):`in ${m} min`;
-function counts(){const c={};ACT.items.forEach(i=>{[i.from,i.to].forEach(x=>{if(x!=='all')c[x]=(c[x]||0)+1})});return Object.entries(c).filter(([k])=>isBot(k)).sort((a,b)=>b[1]-a[1])}
-function hourly(){const h=Array(24).fill(0);ACT.items.forEach(i=>{const x=+String(i.time).slice(0,2);if(x>=0&&x<24)h[x]++});return h}
-function topics(){const c={};ACT.items.forEach(i=>{const t=(i.topic||'').trim();if(t&&t!=='private')c[t]=(c[t]||0)+1});return Object.entries(c).sort((a,b)=>b[1]-a[1])}
+function counts(){const c={};workspaceActivity().forEach(i=>{[i.from,i.to].forEach(x=>{if(x!=='all')c[x]=(c[x]||0)+1})});return Object.entries(c).filter(([k])=>isBot(k)).sort((a,b)=>b[1]-a[1])}
+function hourly(){const h=Array(24).fill(0);workspaceActivity().forEach(i=>{const x=+String(i.time).slice(0,2);if(x>=0&&x<24)h[x]++});return h}
+function topics(){const c={};workspaceActivity().forEach(i=>{const t=(i.topic||'').trim();if(t&&t!=='private')c[t]=(c[t]||0)+1});return Object.entries(c).sort((a,b)=>b[1]-a[1])}
 const syncTxt=()=>ACT.generated?`updated ${ACT.generated}`:SYNC?`synced ${SYNC.toTimeString().slice(0,5)}`:'offline';
 const flowsOf=id=>FLOWS.filter(f=>(f[0]===id||f[1]===id)&&(isBot(f[0])||APPS[f[0]])&&(isBot(f[1])||APPS[f[1]]));
 
@@ -145,9 +186,9 @@ function miniTree(full){const hs=DEPTS();return `<div class="mtree"><div class="
 const W={};
 const def=(id,o)=>{W[id]=Object.assign({sz:['S','M'],d:'S',sec:'home'},o)};
 def('status',{n:'Crew overview',sec:'home',sz:['S','M'],d:'M',r:z=>{
-const count=R.bots.length,un=deptBots('unassigned').length;
+const count=workspaceBots().length,un=deptBots('unassigned').length;
 return `${lbl('people','Crew overview')}<div class="cc-stat"><strong>${count}</strong><span>bots in directory</span></div>
-<div class="cc-substats"><span><b>${DEPTS().filter(d=>d.id!=='unassigned').length}</b> departments</span><span><b>${GROUPS().length}</b> chats</span><span><b>${ACT.items.length}</b> messages</span></div>
+<div class="cc-substats"><span><b>${DEPTS().filter(d=>d.id!=='unassigned').length}</b> departments</span><span><b>${GROUPS().length}</b> chats</span><span><b>${workspaceActivity().length}</b> messages</span></div>
 <small class="cc-footnote">${un?un+' unassigned · ':''}Last data fetch: ${SYNC?SYNC.toLocaleTimeString('en-CA',{hour:'2-digit',minute:'2-digit'}):'not available'}</small>`;
 },mini:()=>miniStatus()});
 def('next',{n:'Next up',sec:'home',sz:['S','M'],r:s=>{const L=nextRuns(s==='M'?3:1);if(!L.length)return `${lbl('clock','Next up')}<div class="empty">No schedule</div>`;const x=L[0];return `${lbl('clock','Next up')}${s==='S'?`<div class="wn">${esc(x.clock)}</div><small><b style="color:${col(x.who[0])}">${esc(x.who.map(short).join(', '))}</b></small><small class="mut">${esc(x.note)}</small><small class="mut" style="margin-top:auto">${esc(x.label)} · ${inTxt(x.in)}</small>`:`<div class="wlist">${L.map(y=>`<div><span><b>${esc(y.when)}</b> <b style="color:${col(y.who[0])}">${esc(y.who.map(short).join(', '))}</b> <span class="mut">${esc(y.note)}</span></span><em class="mut">${inTxt(y.in)}</em></div>`).join('')}</div>`}`},mini:()=>miniSchedule()});
@@ -190,7 +231,7 @@ function miniStatus(){const un=deptBots('unassigned');return `<div class="card">
  <div class="card"><h2>Departments</h2>${DEPTS().map(d=>`<button class="item" data-dept="${d.id}"><span class="dbadge sm" style="background:${d.color}">${ic('grid',18)}</span><div class="grow"><div class="t">${esc(d.name)}</div><div class="s">${d.head?'Head: '+esc(nm(d.head))+' · ':''}${deptAll(d.id).length} bots</div></div><span class="chev">›</span></button>`).join('')}</div>
  ${un.length?`<div class="card"><h2>Unassigned</h2>${un.map(b=>botRow(b.id)).join('')}</div>`:''}
  <div class="card"><h2>Today</h2><div class="kv"><span>Messages</span><b>${ACT.items.length}</b></div><div class="kv"><span>Bots talking</span><b>${counts().length}</b></div><div class="kv"><span>Private (details hidden)</span><b>${ACT.items.filter(i=>i.topic==='private').length}</b></div></div>`}
-function miniSchedule(){const L=SCHED(),nx=L[0];let lastG='';return `${nx?`<div class="card"><div class="tiny">Next up</div><div class="big">${esc(nx.when)} · ${esc(nx.who.map(short).join(', '))}</div><div class="tiny">${esc(nx.note)} · ${inTxt(nx.in)}</div></div>`:''}<div class="card"><h2>Crew schedule <small>next up first · Ontario time</small></h2>${L.map(s=>{const g=s.group!==lastG?`<div class="sgrp">${esc(s.group)}</div>`:'';lastG=s.group;return `${g}<div class="srow"><b>${s.label!==s.group?`<span class="dl">${esc(s.label)}</span>`:''}${esc(s.clock)}</b><div><div class="schips">${s.who.map(w=>`<button class="chip" data-bot="${esc(w)}" style="color:${col(w)}">${esc(short(w))}</button>`).join('')}</div><div class="tiny">${esc(s.note)} · ${esc(CrewSched.rep(s))}</div></div></div>`}).join('')}</div>`}
+function miniSchedule(){const L=workspaceSchedule(),nx=L[0];let lastG='';return `${nx?`<div class="card"><div class="tiny">Next up</div><div class="big">${esc(nx.when)} · ${esc(nx.who.map(short).join(', '))}</div><div class="tiny">${esc(nx.note)} · ${inTxt(nx.in)}</div></div>`:''}<div class="card"><h2>Crew schedule <small>next up first · Ontario time</small></h2>${L.map(s=>{const g=s.group!==lastG?`<div class="sgrp">${esc(s.group)}</div>`:'';lastG=s.group;return `${g}<div class="srow"><b>${s.label!==s.group?`<span class="dl">${esc(s.label)}</span>`:''}${esc(s.clock)}</b><div><div class="schips">${s.who.map(w=>`<button class="chip" data-bot="${esc(w)}" style="color:${col(w)}">${esc(short(w))}</button>`).join('')}</div><div class="tiny">${esc(s.note)} · ${esc(CrewSched.rep(s))}</div></div></div>`}).join('')}</div>`}
 function miniBusiest(){const c=counts();return `<div class="card"><h2>Busiest today <small>messages sent or received</small></h2>${c.map(([id,n])=>`<button class="item" data-bot="${esc(id)}">${av(id,36)}<div class="grow"><div class="t">${esc(nm(id))}</div><div class="bar"><i style="width:${n/c[0][1]*100}%;background:${col(id)}"></i></div></div><b>${n}</b></button>`).join('')||'<div class="empty">No messages yet</div>'}</div>`}
 function miniNet(){return `<div class="card"><h2>Who talked to whom <small>today</small></h2><div class="wnet big">${netSVG(ACT.items)||'<div class="empty">No messages yet</div>'}</div><p class="tiny" style="text-align:center">Tap a bot to see its day.</p></div>${openFull('activity','Activity')}`}
 function miniExecs(){return `<div class="card"><h2>Executives <small>board meets Sun 18:00</small></h2>${['chief',...HEADS()].filter(isBot).map(id=>botRow(id,BOT[id].role+(DEP[BOT[id].dept]&&BOT[id].dept!=='exec'?'':''))).join('')}</div>${openFull('org','Org chart')}`}
@@ -207,10 +248,10 @@ function treeHTML(){
 function focusedHTML(){
  const target=BOT[FOCUS_ID]||BOT.chief||BOT.jackson;
  if(!target)return '<div class="empty">No bot selected</div>';
- const rel=Object.values(BOT).filter(b=>b.reportsTo===target.id);
+ const rel=Object.values(BOT).filter(b=>inWorkspace(b.id)&&b.reportsTo===target.id);
  const links=flowsOf(target.id);
- const related=[...new Set(links.map(f=>f[0]===target.id?f[1]:f[0]))];
- const opts=Object.values(BOT).filter(b=>b.id!=='jackson').sort((a,b)=>a.name.localeCompare(b.name));
+ const related=[...new Set(links.filter(f=>inWorkspace(f[0])&&inWorkspace(f[1])).map(f=>f[0]===target.id?f[1]:f[0]))];
+ const opts=workspaceBots().sort((a,b)=>a.name.localeCompare(b.name));
  return '<div class="card cc-focus"><label class="f" for="crew-focus">Focus on a bot</label><select id="crew-focus" data-focus-select>'+opts.map(b=>'<option value="'+esc(b.id)+'" '+(b.id===target.id?'selected':'')+'>'+esc(b.name)+'</option>').join('')+'</select>'
  +'<div class="cc-focuslead">'+av(target.id,54)+'<div><b>'+esc(target.name)+'</b><p>'+esc(target.role)+'</p></div></div>'
  +'<div class="cc-focusgrid"><div><small>Reports to</small><b>'+esc(target.reportsTo?nm(target.reportsTo):'—')+'</b></div><div><small>Direct reports</small><b>'+rel.length+'</b></div><div><small>Connected systems</small><b>'+related.length+'</b></div></div>'
@@ -224,7 +265,7 @@ function vOrg(){
  +'<h2 class="sec">Departments & group chats</h2><details class="cc-dept"><summary><b>Group chats</b><small>'+GROUPS().length+' groups</small><span class="chev">⌄</span></summary><div class="cc-members">'+GROUPS().map(g=>'<button class="item card gitemc" data-grp="'+esc(g.slug)+'">'+avStack(g.members,5,26)+'<div class="grow"><div class="t">'+esc(g.name)+'</div><div class="s">'+g.members.length+' members</div></div><span class="chev">›</span></button>').join('')+'</div></details>';
 }
 function vActivity(feedOnly){
- const L=[...ACT.items].reverse();
+ const L=[...workspaceActivity()].reverse();
  const tabs=feedOnly?'':'<div class="seg">'+[['feed','Messages'],['schedule','Schedules'],['net','Network']].map(([k,n])=>'<button class="'+(ACTV===k?'on':'')+'" data-actv="'+k+'">'+n+'</button>').join('')+'</div>';
  if(!feedOnly&&ACTV==='schedule')return tabs+
  '<div class="notice"><b>Schedule estimates, not execution confirmations.</b> Times come from the saved roster. Actual run success will require a backend execution log.</div>'+miniSchedule();
@@ -307,7 +348,7 @@ function greeting(){const h=torNow().h,n='Jackson';const g=h<12?'Good morning':h
 function pageHTML([k,name],i){const list=LY[k]||[]; const sub=k==='home'?new Date().toLocaleDateString('en-CA',{weekday:'long',month:'long',day:'numeric'}):'Crew Map · '+syncTxt();
  const right=EDIT?`<button class="pillbtn" data-add>+ Add</button><button class="pillbtn on" data-done>Done</button>`:'';
  return `<section class="page" data-pg="${i}"><div class="pin2"><div class="top"><div class="tl"><div class="sub"><span>${esc(sub)}</span>${EDIT?'':'<button class="samplebadge" data-sample aria-label="About live data"><i class="live"></i>Feed</button>'}</div><h1>${esc(k==='home'?greeting():name)}</h1></div><div class="tr">${right}</div></div>
- <div class="wgrid">${list.filter(w=>W[w.t]).map(w=>`<div class="w ${w.s}" data-wid="${w.id}" data-t="${esc(w.t)}" role="button" aria-label="${esc(W[w.t].n)}">${EDIT?`<button class="wx" data-x aria-label="Remove">×</button>${W[w.t].sz.length>1?`<button class="wsz" data-sz aria-label="Resize">${w.s}</button>`:''}`:''}<div class="wi">${W[w.t].r(w.s)}</div></div>`).join('')||`<div class="emptypg">${EDIT?'Tap + Add to put widgets here':'Press and hold to add widgets'}</div>`}</div></div></section>`}
+ <button class="cc-workspace-trigger" data-workspace-open>${esc(WORKSPACE_NAMES[WS_ACTIVE])} <span>⌄</span></button><div class="wgrid">${list.filter(w=>W[w.t]).map(w=>`<div class="w ${w.s}" data-wid="${w.id}" data-t="${esc(w.t)}" role="button" aria-label="${esc(W[w.t].n)}">${EDIT?`<button class="wx" data-x aria-label="Remove">×</button>${W[w.t].sz.length>1?`<button class="wsz" data-sz aria-label="Resize">${w.s}</button>`:''}`:''}<div class="wi">${W[w.t].r(w.s)}</div></div>`).join('')||`<div class="emptypg">${EDIT?'Tap + Add to put widgets here':'Press and hold to add widgets'}</div>`}</div></div></section>`}
 function render(){if(!R)return;syncDyn();syncLayout();const app=$('#app');
  app.innerHTML=`<div class="sb ${EDIT?'editing':''}" id="sb"><div class="track" id="track">${PAGES.map(pageHTML).join('')}</div></div>
  <div class="dockwrap"><div class="pdots">${PAGES.map((p,i)=>`<button data-pg="${i}" aria-label="${p[1]}" class="${i===SB.cur?'on':''}"><i></i></button>`).join('')}</div><nav class="dock" aria-label="Apps">${DOCK.map(k=>`<button data-app="${k}" aria-label="${APPV[k][0]}"><span class="aico">${ic(APPV[k][2],28)}</span><span>${APPV[k][0]}</span></button>`).join('')}</nav></div>`;
@@ -320,7 +361,8 @@ function setEdit(on){if(EDIT&&!on){LY.custom=LY.custom||{};LY.custom[curKey()]=t
 const curKey=()=>PAGES[SB.cur][0];
 function bindSB(){const sb=$('#sb'),track=$('#track');let st=null,lp=null;
  $$('.dock [data-app]').forEach(b=>b.onclick=()=>{if(EDIT)setEdit(false);openOV({kind:'app',k:b.dataset.app},b.querySelector('.aico').getBoundingClientRect())});
- $$('.pdots [data-pg]').forEach(b=>b.onclick=()=>go(+b.dataset.pg));
+ $('.pdots [data-pg]').forEach(b=>b.onclick=()=>go(+b.dataset.pg));
+ $('.cc-workspace-trigger').forEach(b=>b.onclick=workspacePicker);
  sb.querySelectorAll('[data-done]').forEach(b=>b.onclick=()=>setEdit(false));
  sb.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>gallery());
  sb.querySelectorAll('[data-sample]').forEach(b=>b.onclick=()=>ui.alert({title:'Live crew data',message:'The roster, departments and group chats are rebuilt every 90 seconds from the bots you set up in Grok Bot, and today’s bot-to-bot messages come from the crew log with private details removed. This display cannot currently control Grok bots.',action:'Got it'}));
