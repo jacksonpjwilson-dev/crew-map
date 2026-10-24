@@ -421,3 +421,68 @@ body{background:var(--bg);overflow:hidden}
 .ios-org-heading strong{font-size:11px;line-height:1.12;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
 .ios-org-heading b{font-size:10px;font-weight:700;color:var(--muted)}
 .ios-org-people{font-size:10px;color:var(--muted);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;padding-left:13px}
+
+#build-version{position:fixed;right:8px;top:calc(env(safe-area-inset-top) + 4px);z-index:9000;color:#0a84ff;background:rgba(0,122,255,.13);border:1px solid rgba(10,132,255,.3);font:700 9px/1.2 -apple-system,system-ui,sans-serif;padding:4px 6px;border-radius:8px;pointer-events:none}
+
+/* CREW iOS HOME LOOK — V5: wallpaper, frosted widgets, app icons */
+[data-theme=dark]{
+ --wallpaper-top:#263766;--wallpaper-center:#26275c;--wallpaper-bottom:#101c3e;
+ --glass:rgba(25,31,55,.65);--glass-border:rgba(255,255,255,.19);--glass-muted:rgba(234,241,255,.70);
+ --glass-dock:rgba(244,245,255,.19);--wall-text:#fff
+}
+[data-theme=light]{
+ --wallpaper-top:#bddafb;--wallpaper-center:#e7c3e6;--wallpaper-bottom:#d9eafb;
+ --glass:rgba(255,255,255,.62);--glass-border:rgba(255,255,255,.72);--glass-muted:#596075;
+ --glass-dock:rgba(255,255,255,.55);--wall-text:#182237
+}
+.sb{
+ background:
+ radial-gradient(ellipse 120% 55% at 10% -5%,rgba(112,191,255,.53) 0%,transparent 70%),
+ radial-gradient(ellipse 90% 52% at 103% 62%,rgba(181,114,243,.44) 0%,transparent 72%),
+ radial-gradient(ellipse 120% 48% at 0% 105%,rgba(77,160,246,.38) 0%,transparent 75%),
+ linear-gradient(150deg,var(--wallpaper-top),var(--wallpaper-center) 48%,var(--wallpaper-bottom))!important;
+ color:var(--wall-text)
+}
+.sb::before{content:"";position:absolute;pointer-events:none;left:-38vw;top:25vh;width:150vw;height:36vh;border-radius:50%;transform:rotate(-24deg);background:linear-gradient(180deg,rgba(255,255,255,.12),transparent 65%);filter:blur(24px)}
+.sb .top h1{color:var(--wall-text);text-shadow:0 1px 12px rgba(0,0,0,.12)}
+.sb .top .sub{color:var(--wall-text);opacity:.75}
+.sb .w{
+ background:var(--glass)!important;
+ border:1px solid var(--glass-border)!important;
+ border-radius:clamp(21px,6vw,29px)!important;
+ box-shadow:0 8px 26px rgba(6,15,42,.14),inset 0 1px 0 rgba(255,255,255,.13)!important;
+ -webkit-backdrop-filter:blur(38px) saturate(155%);
+ backdrop-filter:blur(38px) saturate(155%);
+ color:var(--wall-text);
+}
+.sb .w::before{z-index:0;opacity:.5;background:linear-gradient(125deg,color-mix(in srgb,var(--widget-tint) 18%,transparent),transparent 56%)}
+.sb .w::after{display:none}
+.sb .wi{position:relative;z-index:1}
+.sb .wi small,.sb .wi .mut,.sb .cc-stat span,.sb .cc-footnote{color:var(--glass-muted)!important}
+.sb .wl{font-size:11px!important;letter-spacing:.06em!important;font-weight:750}
+.sb .wl svg{width:16px;height:16px}
+.sb .cc-stat strong{color:var(--wall-text)}
+.sb .cc-substats span,.sb .ios-org-dept{background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.09)}
+[data-theme=light] .sb .cc-substats span,[data-theme=light] .sb .ios-org-dept{background:rgba(255,255,255,.37);border-color:rgba(255,255,255,.54)}
+.sb .cc-substats b,.sb .ios-org-heading strong,.sb .ios-org-chief strong{color:var(--wall-text)}
+.sb .ios-org-chief{background:rgba(0,122,255,.22);border:1px solid rgba(255,255,255,.15)}
+.sb .ios-org-rail{background:rgba(255,255,255,.38)}
+.sb .ios-org-people,.sb .ios-org-dept b,.sb .ios-org-chief small{color:var(--glass-muted)}
+.sb .cc-workspace-trigger{background:var(--glass);border:1px solid var(--glass-border);color:var(--wall-text);-webkit-backdrop-filter:blur(22px);backdrop-filter:blur(22px);border-radius:100px;padding:5px 14px}
+.sb .cc-workspace-trigger span{color:var(--wall-text);opacity:.75}
+.dockwrap{gap:5px}
+.dock{
+ background:var(--glass-dock)!important;border:1px solid var(--glass-border)!important;
+ border-radius:32px!important;padding:10px 17px!important;
+ -webkit-backdrop-filter:blur(40px) saturate(175%);backdrop-filter:blur(40px) saturate(175%);
+ box-shadow:0 14px 40px rgba(10,17,40,.16),inset 0 1px 0 rgba(255,255,255,.25)!important
+}
+.dock button{color:var(--wall-text);font-size:10px}
+.dock button span{opacity:1;text-shadow:0 1px 4px rgba(0,0,0,.12)}
+.dock .aico{width:54px;height:54px;border-radius:16px!important;box-shadow:0 4px 10px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.28)!important}
+.dock button:nth-child(1) .aico{background:linear-gradient(155deg,#6b7fff,#6542d9)!important;color:#fff!important}
+.dock button:nth-child(2) .aico{background:linear-gradient(155deg,#5bd8e5,#0786c9)!important;color:#fff!important}
+.dock button:nth-child(3) .aico{background:linear-gradient(155deg,#a5a8b4,#606476)!important;color:#fff!important}
+.pdots button i{background:var(--wall-text)}
+[data-theme=light] .dock button{color:#22304a}
+@media(max-height:730px){.dock{padding:6px 13px!important}.dock .aico{width:46px;height:46px}}
