@@ -486,3 +486,36 @@ body{background:var(--bg);overflow:hidden}
 .pdots button i{background:var(--wall-text)}
 [data-theme=light] .dock button{color:#22304a}
 @media(max-height:730px){.dock{padding:6px 13px!important}.dock .aico{width:46px;height:46px}}
+
+/* V6 — recognizable iPhone SpringBoard, not a generic corporate dashboard */
+.sb{
+ background:
+ radial-gradient(ellipse 100% 48% at 25% 14%,rgba(182,219,255,.76),transparent 75%),
+ radial-gradient(ellipse 95% 48% at 106% 62%,rgba(174,123,247,.60),transparent 75%),
+ radial-gradient(ellipse 110% 55% at 6% 103%,rgba(73,127,255,.50),transparent 71%),
+ linear-gradient(155deg,#4273ca 0%,#7064bc 46%,#223c85 100%)!important;
+}
+[data-theme=light] .sb{
+ background:
+ radial-gradient(ellipse 110% 50% at 13% 1%,rgba(255,255,255,.93),transparent 75%),
+ radial-gradient(ellipse 120% 55% at 95% 59%,rgba(254,197,244,.85),transparent 74%),
+ radial-gradient(ellipse 100% 52% at 5% 100%,rgba(143,207,255,.83),transparent 75%),
+ linear-gradient(140deg,#b8dfff 0%,#c9d5fd 52%,#b8c7fa 100%)!important;
+}
+.sb::before{background:linear-gradient(170deg,rgba(255,255,255,.18),rgba(255,255,255,0) 60%);transform:rotate(-17deg);filter:blur(28px)}
+.sb .w{background:color-mix(in srgb,var(--glass) 92%,transparent)!important;border:1px solid rgba(255,255,255,.24)!important}
+.sb .w[data-t="status"]{background:linear-gradient(115deg,rgba(26,119,236,.22),rgba(255,255,255,.02)),var(--glass)!important}
+.sb .w[data-t="next"]{background:linear-gradient(115deg,rgba(52,199,89,.20),rgba(255,255,255,.03)),var(--glass)!important}
+.sb .w[data-t="attention"]{background:linear-gradient(115deg,rgba(255,149,0,.18),rgba(255,255,255,.02)),var(--glass)!important}
+.sb .w[data-t="orgmini"]{background:linear-gradient(135deg,rgba(175,82,222,.18),rgba(255,255,255,.03)),var(--glass)!important}
+.sb .w .wl{font-weight:780;color:var(--wall-text)!important;opacity:.95}
+.sb .w .wl svg{color:var(--widget-tint)!important}
+.sb .top h1{font-weight:760;letter-spacing:-.04em}
+.sb .cc-workspace-trigger{box-shadow:0 3px 14px rgba(0,0,0,.10)}
+.dock{border-radius:30px!important;min-width:240px;justify-content:space-evenly}
+.dock .aico{width:56px;height:56px;border-radius:16px!important}
+.dock button:nth-child(1) .aico{background:linear-gradient(145deg,#9069fd,#5145d7)!important}
+.dock button:nth-child(2) .aico{background:linear-gradient(145deg,#5edcca,#009fbb)!important}
+.dock button:nth-child(3) .aico{background:linear-gradient(145deg,#9097a8,#444d69)!important}
+.dock button .aico svg{stroke-width:1.9}
+@media(max-height:700px){.dock .aico{width:46px;height:46px}}
