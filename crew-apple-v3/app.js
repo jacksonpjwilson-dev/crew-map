@@ -1,6 +1,6 @@
 /* Crew Map — widget-home preview. LIVE public data: roster.json + activity.json from the data branch,
    rebuilt every 90 s on the box from the bots in Grok Bot. Nothing here can change any bot. */
-const PREVIEW_VER='crew-vNext-preview';
+const PREVIEW_VER='crew-ios-v6';
 (function(){
 'use strict';
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
@@ -9,7 +9,7 @@ const NS='http://www.w3.org/2000/svg';
 const mkE=(t,a,p)=>{const e=document.createElementNS(NS,t);for(const k in a)if(a[k]!=null)e.setAttribute(k,a[k]);p&&p.appendChild(e);return e};
 
 /* ---------- storage ---------- */
-const K={layout:'crewmap-apple-v4:layout',theme:'crewmapw:theme',seen:'crewmap-next:seen',orgv:'crewmap-next:orgv'};
+const K={layout:'crewmap-ios-v6:layout',theme:'crewmapw:theme',seen:'crewmap-next:seen',orgv:'crewmap-next:orgv'};
 const load=(k,f)=>{try{const v=JSON.parse(localStorage.getItem(k)||'null');return v??f()}catch(e){return f()}};
 function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('on'),1800)}
 
@@ -344,12 +344,12 @@ const PAGES=[['home','Home'],['org','Bots'],['activity','Activity']];
 const APPV={org:['Org chart',vOrg,'org'],activity:['Activity',()=>vActivity(false),'activity'],depts:['Departments',vDepts,'grid'],groups:['Group chats',vGroups,'chat'],settings:['Settings',vSettings,'settings']};
 const DOCK=['org','activity','settings'];
 let uidN=0;const nid=()=>'w'+Date.now().toString(36)+(uidN++);
-const DEF_LAYOUT=()=>({home:[['status','M'],['next','S'],['attention','S'],['orgmini','L']],org:[['orgmini','L'],['next','M'],['attention','S']],activity:[['msgs','M'],['next','M'],['net','L']],depts:[],groups:[]});
+const DEF_LAYOUT=()=>({home:[['status','M'],['next','S'],['attention','S'],['orgmini','L']],org:[['grpsum','M'],['unassigned','S'],['bot:chief','S']],activity:[['msgs','M'],['net','L'],['topics','M']],depts:[],groups:[]});
 const AUTO=[];
 function autoList(k){const L=[];if(k==='depts'){DEPTS().forEach(d=>L.push({id:'a-dept:'+d.id,t:'dept:'+d.id,s:'S'}));if(fits([...L,{s:'M'}]))L.push({id:'a-deptsum',t:'deptsum',s:'M'})}
  else{GROUPS().forEach(g=>L.push({id:'a-grp:'+g.slug,t:'grp:'+g.slug,s:'S'}));if(fits([...L,{s:'M'}]))L.push({id:'a-grpsum',t:'grpsum',s:'M'})}
  while(L.length&&!fits(L))L.pop();return L}
-function syncLayout(){LY.custom=LY.custom||{};AUTO.forEach(k=>{if(!LY.custom[k])LY[k]=autoList(k)});for(const k in LY)if(Array.isArray(LY[k]))LY[k]=LY[k].filter(w=>W[w.t])}
+function syncLayout(){LY.custom=LY.custom||{};AUTO.forEach(k=>{if(!LY.custom[k])LY[k]=autoList(k)});for(const k in LY)if(Array.isArray(LY[k]))LY[k]=LY[k].filter(w=>W[w.t]);for(const k of ['home','org','activity']){const seen=new Set();LY[k]=(LY[k]||[]).filter(w=>{if(seen.has(w.t))return false;seen.add(w.t);return !(k!=='home'&&w.t==='orgmini')})}}
 
 /* ---------- sheets ---------- */
 function sheet(html,bind){const r=$('#sheet-root');r.innerHTML=`<div class="sheet-bg"><div class="sheet" role="dialog" aria-modal="true"><div class="grab"></div>${html}</div></div>`;const bg=r.firstChild;bg.addEventListener('click',e=>{if(e.target===bg)closeSheet()});if(bind)bind(bg.querySelector('.sheet'))}
