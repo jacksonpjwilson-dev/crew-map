@@ -9,7 +9,7 @@ const NS='http://www.w3.org/2000/svg';
 const mkE=(t,a,p)=>{const e=document.createElementNS(NS,t);for(const k in a)if(a[k]!=null)e.setAttribute(k,a[k]);p&&p.appendChild(e);return e};
 
 /* ---------- storage ---------- */
-const K={layout:'crewmapw:layout',theme:'crewmapw:theme',seen:'crewmapw:seen',orgv:'crewmapw:orgv'};
+const K={layout:'crewmap-next:layout',theme:'crewmapw:theme',seen:'crewmap-next:seen',orgv:'crewmap-next:orgv'};
 const load=(k,f)=>{try{const v=JSON.parse(localStorage.getItem(k)||'null');return v??f()}catch(e){return f()}};
 function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('on'),1800)}
 
@@ -144,7 +144,12 @@ function miniTree(full){const hs=DEPTS();return `<div class="mtree"><div class="
 // sec: home | org | activity | depts | groups. sz: allowed sizes. r(size) -> inner html. mini() -> mini-app body.
 const W={};
 const def=(id,o)=>{W[id]=Object.assign({sz:['S','M'],d:'S',sec:'home'},o)};
-def('status',{n:'Crew status',sec:'home',sz:['S','M'],d:'M',r:s=>{const nb=R.bots.length,un=deptBots('unassigned').length;return `${lbl('people','Crew status')}<div class="wn">${nb} <em>bots</em></div>${s==='M'?`<div class="wsplitn"><div><span>Departments</span><b>${DEPTS().filter(d=>d.id!=='unassigned').length}</b></div><div><span>Group chats</span><b>${GROUPS().length}</b></div><div><span>Messages today</span><b>${ACT.items.length}</b></div></div>`:`<small>${DEPTS().filter(d=>d.id!=='unassigned').length} depts · ${GROUPS().length} chats</small><small class="${un?'warnt':'mut'}" style="margin-top:auto"><i class="live"></i>${un?un+' unassigned':esc(syncTxt())}</small>`}`},mini:()=>miniStatus()});
+def('status',{n:'Crew overview',sec:'home',sz:['S','M'],d:'M',r:z=>{
+const count=R.bots.length,un=deptBots('unassigned').length;
+return `${lbl('people','Crew overview')}<div class="cc-stat"><strong>${count}</strong><span>bots in directory</span></div>
+<div class="cc-substats"><span><b>${DEPTS().filter(d=>d.id!=='unassigned').length}</b> departments</span><span><b>${GROUPS().length}</b> chats</span><span><b>${ACT.items.length}</b> messages</span></div>
+<small class="cc-footnote">${un?un+' unassigned · ':''}Last data fetch: ${SYNC?SYNC.toLocaleTimeString('en-CA',{hour:'2-digit',minute:'2-digit'}):'not available'}</small>`;
+},mini:()=>miniStatus()});
 def('next',{n:'Next up',sec:'home',sz:['S','M'],r:s=>{const L=nextRuns(s==='M'?3:1);if(!L.length)return `${lbl('clock','Next up')}<div class="empty">No schedule</div>`;const x=L[0];return `${lbl('clock','Next up')}${s==='S'?`<div class="wn">${esc(x.clock)}</div><small><b style="color:${col(x.who[0])}">${esc(x.who.map(short).join(', '))}</b></small><small class="mut">${esc(x.note)}</small><small class="mut" style="margin-top:auto">${esc(x.label)} · ${inTxt(x.in)}</small>`:`<div class="wlist">${L.map(y=>`<div><span><b>${esc(y.when)}</b> <b style="color:${col(y.who[0])}">${esc(y.who.map(short).join(', '))}</b> <span class="mut">${esc(y.note)}</span></span><em class="mut">${inTxt(y.in)}</em></div>`).join('')}</div>`}`},mini:()=>miniSchedule()});
 def('latest',{n:'Latest messages',sec:'home',sz:['M','L'],d:'M',r:s=>{const L=[...ACT.items].reverse().slice(0,s==='L'?8:3);return `${lbl('chat','Latest')}${L.length?`<div class="wlist">${L.map(msgLine).join('')}</div>`:'<div class="empty">Quiet so far today</div>'}`},mini:()=>vActivity(true)});
 def('busiest',{n:'Busiest today',sec:'home',sz:['S'],r:()=>{const c=counts()[0];return `${lbl('bolt','Busiest today')}${c?`<div class="wbig">${av(c[0],44)}</div><b class="wname">${esc(nm(c[0]))}</b><small class="mut">${c[1]} messages</small>`:'<div class="empty">No messages yet</div>'}`},mini:()=>miniBusiest()});
@@ -190,7 +195,7 @@ function miniBusiest(){const c=counts();return `<div class="card"><h2>Busiest to
 function miniNet(){return `<div class="card"><h2>Who talked to whom <small>today</small></h2><div class="wnet big">${netSVG(ACT.items)||'<div class="empty">No messages yet</div>'}</div><p class="tiny" style="text-align:center">Tap a bot to see its day.</p></div>${openFull('activity','Activity')}`}
 function miniExecs(){return `<div class="card"><h2>Executives <small>board meets Sun 18:00</small></h2>${['chief',...HEADS()].filter(isBot).map(id=>botRow(id,BOT[id].role+(DEP[BOT[id].dept]&&BOT[id].dept!=='exec'?'':''))).join('')}</div>${openFull('org','Org chart')}`}
 function miniUnassigned(){const L=deptBots('unassigned');return `<div class="notice">Bots land here when the map can’t tell which department they belong to. Add them to a department’s group chat in Grok Bot (or name them in the head’s description) and they move within about 2 minutes.</div><div class="card"><h2>Unassigned <small>${L.length}</small></h2>${L.map(b=>botRow(b.id)).join('')||'<div class="empty">Every bot has a department</div>'}</div>`}
-let ORGV=localStorage.getItem(K.orgv)||'browse',ACTV='feed';
+let ORGV=['browse','focus','map'].includes(localStorage.getItem(K.orgv))?localStorage.getItem(K.orgv):'browse',ACTV='feed';
 let FOCUS_ID='chief';
 /* Mobile-first bot directory and focused relationship explorer. */
 function treeHTML(){
@@ -218,8 +223,13 @@ function vOrg(){
  +(ORGV==='browse'?treeHTML():ORGV==='focus'?focusedHTML():'<div class="card flat mapcard"><svg id="omap" xmlns="'+NS+'"></svg></div><p class="tiny" style="text-align:center">Full relationship map · pinch to zoom or scroll to explore. Use Focus for a clearer mobile view.</p>')
  +'<h2 class="sec">Departments & group chats</h2><details class="cc-dept"><summary><b>Group chats</b><small>'+GROUPS().length+' groups</small><span class="chev">⌄</span></summary><div class="cc-members">'+GROUPS().map(g=>'<button class="item card gitemc" data-grp="'+esc(g.slug)+'">'+avStack(g.members,5,26)+'<div class="grow"><div class="t">'+esc(g.name)+'</div><div class="s">'+g.members.length+' members</div></div><span class="chev">›</span></button>').join('')+'</div></details>';
 }
-function vActivity(feedOnly){const L=[...ACT.items].reverse();return `${feedOnly?'':`<div class="seg">${[['feed','Feed'],['net','Network']].map(([k,n])=>`<button class="${ACTV===k?'on':''}" data-actv="${k}">${n}</button>`).join('')}</div>`}
- ${!feedOnly&&ACTV==='net'?`<div class="card"><div class="wnet big">${netSVG(ACT.items)||'<div class="empty">No messages yet</div>'}</div></div>`:`<div class="card"><h2>${esc(ACT.date||'Today')} <small>${ACT.items.length} messages · ${esc(syncTxt())}</small></h2>${L.map(i=>msgRow(i,ACT.items.indexOf(i))).join('')||'<div class="empty">No bot-to-bot messages yet today.</div>'}</div><p class="tiny" style="text-align:center">Private topics and anything with money, links or numbers are kept off this public page.</p>`}`}
+function vActivity(feedOnly){
+ const L=[...ACT.items].reverse();
+ const tabs=feedOnly?'':'<div class="seg">'+[['feed','Messages'],['schedule','Schedules'],['net','Network']].map(([k,n])=>'<button class="'+(ACTV===k?'on':'')+'" data-actv="'+k+'">'+n+'</button>').join('')+'</div>';
+ if(!feedOnly&&ACTV==='schedule')return tabs+
+ '<div class="notice"><b>Schedule estimates, not execution confirmations.</b> Times come from the saved roster. Actual run success will require a backend execution log.</div>'+miniSchedule();
+ return tabs+(!feedOnly&&ACTV==='net'?'<div class="card"><div class="wnet big">'+(netSVG(ACT.items)||'<div class="empty">No messages yet</div>')+'</div></div>':'<div class="card"><h2>'+esc(ACT.date||'Today')+' <small>'+ACT.items.length+' messages · '+esc(syncTxt())+'</small></h2>'+(L.map(i=>msgRow(i,ACT.items.indexOf(i))).join('')||'<div class="empty">No bot-to-bot messages reported for this date. This does not verify whether automations ran.</div>')+'</div><p class="tiny" style="text-align:center">This feed omits private details. Message activity is not an execution monitor.</p>');
+}
 function vDepts(){return DEPTS().map(d=>`<button class="item card gitemc" data-dept="${d.id}" style="--dc:${d.color}"><span class="dbadge sm" style="background:${d.color}">${ic('grid',18)}</span><div class="grow"><div class="t">${esc(d.name)}</div><div class="s">${d.head?'Head: '+esc(nm(d.head))+' · ':''}${deptAll(d.id).length} bots · ${deptMsgs(d.id).length} msgs today</div>${avStack(deptAll(d.id).map(b=>b.id),8,24)}</div><span class="chev">›</span></button>`).join('')}
 function vGroups(){return GROUPS().map(g=>{const d=DEP[g.dept];return `<button class="item card gitemc" data-grp="${g.slug}"><span class="dbadge sm" style="background:${d?d.color:'var(--accent)'}">${ic('chat',18)}</span><div class="grow"><div class="t">${esc(g.name)}</div><div class="s">${g.members.length} members</div>${avStack(g.members,8,24)}</div><span class="chev">›</span></button>`}).join('')||'<div class="empty">No group chats yet</div>'}
 function vSettings(){return `<div class="notice"><b>Live crew data.</b> Built every 90 s from the bots, departments and group chats you set up in Grok Bot. Read-only: nothing here can change a bot. <a href="../" style="color:var(--accent);font-weight:650">Open classic map ›</a></div>
@@ -266,7 +276,7 @@ const PAGES=[['home','Home'],['org','Bots'],['activity','Activity']];
 const APPV={org:['Org chart',vOrg,'org'],activity:['Activity',()=>vActivity(false),'activity'],depts:['Departments',vDepts,'grid'],groups:['Group chats',vGroups,'chat'],settings:['Settings',vSettings,'settings']};
 const DOCK=['org','activity','settings'];
 let uidN=0;const nid=()=>'w'+Date.now().toString(36)+(uidN++);
-const DEF_LAYOUT=()=>({home:[['status','M'],['next','S'],['busiest','S'],['latest','M'],['msgs','S'],['bot:chief','S']],org:[['orgmini','L'],['execs','M'],['unassigned','S'],['bot:toby','S']],activity:[['net','L'],['msgs','S'],['busiest','S'],['topics','M']],depts:[],groups:[]});
+const DEF_LAYOUT=()=>({home:[['status','M'],['next','S'],['busiest','S'],['latest','M'],['msgs','S'],['bot:chief','S']],org:[['orgmini','L'],['execs','M'],['unassigned','S'],['deptsum','M']],activity:[['msgs','M'],['next','M'],['net','L'],['topics','M']],depts:[],groups:[]});
 const AUTO=[];
 function autoList(k){const L=[];if(k==='depts'){DEPTS().forEach(d=>L.push({id:'a-dept:'+d.id,t:'dept:'+d.id,s:'S'}));if(fits([...L,{s:'M'}]))L.push({id:'a-deptsum',t:'deptsum',s:'M'})}
  else{GROUPS().forEach(g=>L.push({id:'a-grp:'+g.slug,t:'grp:'+g.slug,s:'S'}));if(fits([...L,{s:'M'}]))L.push({id:'a-grpsum',t:'grpsum',s:'M'})}
@@ -296,7 +306,7 @@ const probe=(()=>{const d=document.createElement('div');d.style.cssText='positio
 function greeting(){const h=torNow().h,n='Jackson';const g=h<12?'Good morning':h<17?'Good afternoon':'Good evening';return n?`${g}, ${n}`:g}
 function pageHTML([k,name],i){const list=LY[k]||[]; const sub=k==='home'?new Date().toLocaleDateString('en-CA',{weekday:'long',month:'long',day:'numeric'}):'Crew Map · '+syncTxt();
  const right=EDIT?`<button class="pillbtn" data-add>+ Add</button><button class="pillbtn on" data-done>Done</button>`:'';
- return `<section class="page" data-pg="${i}"><div class="pin2"><div class="top"><div class="tl"><div class="sub"><span>${esc(sub)}</span>${EDIT?'':'<button class="samplebadge" data-sample aria-label="About live data"><i class="live"></i>Live</button>'}</div><h1>${esc(k==='home'?greeting():name)}</h1></div><div class="tr">${right}</div></div>
+ return `<section class="page" data-pg="${i}"><div class="pin2"><div class="top"><div class="tl"><div class="sub"><span>${esc(sub)}</span>${EDIT?'':'<button class="samplebadge" data-sample aria-label="About live data"><i class="live"></i>Feed</button>'}</div><h1>${esc(k==='home'?greeting():name)}</h1></div><div class="tr">${right}</div></div>
  <div class="wgrid">${list.filter(w=>W[w.t]).map(w=>`<div class="w ${w.s}" data-wid="${w.id}" data-t="${esc(w.t)}" role="button" aria-label="${esc(W[w.t].n)}">${EDIT?`<button class="wx" data-x aria-label="Remove">×</button>${W[w.t].sz.length>1?`<button class="wsz" data-sz aria-label="Resize">${w.s}</button>`:''}`:''}<div class="wi">${W[w.t].r(w.s)}</div></div>`).join('')||`<div class="emptypg">${EDIT?'Tap + Add to put widgets here':'Press and hold to add widgets'}</div>`}</div></div></section>`}
 function render(){if(!R)return;syncDyn();syncLayout();const app=$('#app');
  app.innerHTML=`<div class="sb ${EDIT?'editing':''}" id="sb"><div class="track" id="track">${PAGES.map(pageHTML).join('')}</div></div>
@@ -313,7 +323,7 @@ function bindSB(){const sb=$('#sb'),track=$('#track');let st=null,lp=null;
  $$('.pdots [data-pg]').forEach(b=>b.onclick=()=>go(+b.dataset.pg));
  sb.querySelectorAll('[data-done]').forEach(b=>b.onclick=()=>setEdit(false));
  sb.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>gallery());
- sb.querySelectorAll('[data-sample]').forEach(b=>b.onclick=()=>ui.alert({title:'Live crew data',message:'The roster, departments and group chats are rebuilt every 90 seconds from the bots you set up in Grok Bot, and today’s bot-to-bot messages come from the crew log with private details removed. Nothing here can change a bot.',action:'Got it'}));
+ sb.querySelectorAll('[data-sample]').forEach(b=>b.onclick=()=>ui.alert({title:'Live crew data',message:'The roster, departments and group chats are rebuilt every 90 seconds from the bots you set up in Grok Bot, and today’s bot-to-bot messages come from the crew log with private details removed. This display cannot currently control Grok bots.',action:'Got it'}));
  sb.querySelectorAll('[data-x]').forEach(b=>b.onclick=async e=>{e.stopPropagation();const w=b.closest('.w'),k=curKey(),item=LY[k].find(x=>x.id===w.dataset.wid);if(await ui.confirm({title:`Remove “${W[item.t].n}”?`,message:'You can add it back any time from + Add.',action:'Remove'})){LY[k]=LY[k].filter(x=>x!==item);saveLY();render()}});
  sb.querySelectorAll('[data-sz]').forEach(b=>b.onclick=e=>{e.stopPropagation();const w=b.closest('.w'),k=curKey(),item=LY[k].find(x=>x.id===w.dataset.wid),Z=W[item.t].sz,nx=Z[(Z.indexOf(item.s)+1)%Z.length],trial=LY[k].map(x=>x===item?{...x,s:nx}:x);
   if(!fits(trial))return toast('Not enough room on this page');item.s=nx;saveLY();render()});
