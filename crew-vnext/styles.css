@@ -341,3 +341,14 @@ h2.sec{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--
 .dock button{min-width:68px;font-size:11px}
 .dock .aico{width:54px;height:54px}
 @media(max-width:370px){.dock{gap:8px}.dock button{min-width:60px}.cc-focusgrid{grid-template-columns:1fr 1fr}}
+
+/* Workspace picker: views never create or rerun bots */
+.cc-workspace-trigger{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:4px 12px;min-height:28px;border-radius:12px;background:color-mix(in srgb,var(--accent) 11%,var(--card));border:1px solid color-mix(in srgb,var(--accent) 30%,var(--line));color:var(--text);font-size:12px;font-weight:750;margin:0 0 8px;cursor:pointer;max-width:100%}
+.cc-workspace-trigger span{color:var(--accent);font-size:15px}
+.cc-ws-choice{width:100%;display:flex;justify-content:space-between;align-items:center;gap:10px;margin:8px 0;padding:15px;border:1px solid var(--line);background:var(--card);border-radius:15px;font-weight:700;text-align:left}
+.cc-ws-choice small{color:var(--muted);font-weight:500}
+.cc-ws-choice.active{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 13%,var(--card))}
+.cc-ws-bot{display:flex;align-items:center;gap:12px;padding:11px 5px;border-bottom:1px solid var(--line);font-size:14px}
+.cc-ws-bot input{width:18px;height:18px;min-height:0;flex:none;accent-color:var(--accent)}
+.cc-ws-bot span{flex:1;font-weight:650}
+.cc-ws-bot small{color:var(--muted);max-width:34%;font-size:11px;text-align:right}
