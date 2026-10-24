@@ -1,6 +1,6 @@
 /* Crew Map — widget-home preview. LIVE public data: roster.json + activity.json from the data branch,
    rebuilt every 90 s on the box from the bots in Grok Bot. Nothing here can change any bot. */
-const PREVIEW_VER='crew-ios-v6';
+const PREVIEW_VER='crew-nature-v7';
 (function(){
 'use strict';
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
@@ -303,7 +303,7 @@ function vGroups(){return GROUPS().map(g=>{const d=DEP[g.dept];return `<button c
 function vSettings(){return `<div class="notice"><b>Live crew data.</b> Built every 90 s from the bots, departments and group chats you set up in Grok Bot. Read-only: nothing here can change a bot. <a href="../" style="color:var(--accent);font-weight:650">Open classic map ›</a></div>
  <div class="card"><h2>Appearance</h2><div class="seg">${[['light','Light'],['dark','Dark'],['auto','Auto']].map(([k,n])=>`<button class="${TH.mode===k?'on':''}" data-mode="${k}">${n}</button>`).join('')}</div>
   <div class="cwgrid">${CW_ORDER.map(k=>{const c=CW[k],v=isDark()?c.Dk:c.L;return `<button class="cw ${TH.cw===k?'on':''}" data-cw="${k}" style="background:${v.bg};color:${v.fg};border-color:${TH.cw===k?v.a:v.line}"><span class="swc">${[v.a,v.a2,v.a3].map(x=>`<i style="background:${x}"></i>`).join('')}</span><b style="font-family:${c.fh}">${esc(c.n)}</b></button>`}).join('')}</div></div>
- <div class="card"><h2>Home screen</h2><button class="btn ghost block" style="margin-top:0" data-editws>Edit widgets</button><button class="btn ghost block" data-resetlayout>Reset widget layout</button></div>
+ <div class="card"><h2>Home screen</h2><button class="btn ghost block" data-dock-settings>Customize dock</button><button class="btn ghost block" style="margin-top:0" data-editws>Edit widgets</button><button class="btn ghost block" data-resetlayout>Reset widget layout</button></div>
  <div class="card"><h2>Data</h2><div class="kv"><span>Bots</span><b>${R.bots.length}</b></div><div class="kv"><span>Departments</span><b>${DEPTS().length}</b></div><div class="kv"><span>Group chats</span><b>${GROUPS().length}</b></div><div class="kv"><span>Activity</span><b>${esc(syncTxt())}</b></div><button class="btn ghost block" data-welcome>Show welcome again</button></div>
  <div class="verlbl">Crew Map widget-home preview · ${PREVIEW_VER}</div>`}
 
@@ -342,7 +342,44 @@ const openApp=k=>openOV({kind:'app',k},$(`.dock [data-app="${k}"] .aico`)?.getBo
 /* ---------- pages, dock, layout ---------- */
 const PAGES=[['home','Home'],['org','Bots'],['activity','Activity']];
 const APPV={org:['Org chart',vOrg,'org'],activity:['Activity',()=>vActivity(false),'activity'],depts:['Departments',vDepts,'grid'],groups:['Group chats',vGroups,'chat'],settings:['Settings',vSettings,'settings']};
-const DOCK=['org','activity','settings'];
+
+const DOCK_APPS={
+ bots:['Bots','org','violet','org'],routines:['Routines','clock','green','schedule'],alerts:['Alerts','bell','sunset','alerts'],myapps:['My Apps','grid','blue','apps'],
+ activity:['Activity','activity','blue','activity'],tasks:['Tasks','check','green','tasks'],chief:['Ask Chief','chat','violet','chief'],
+ health:['Health','activity','green','health'],depts:['Departments','grid','violet','depts'],groups:['Group Chats','chat','blue','groups'],
+ insights:['Insights','activity','sunset','insights'],schedule:['Schedule','clock','green','schedule'],briefing:['Briefing','activity','blue','briefing'],
+ settings:['Settings','settings','slate','settings'],logbook:['Logbook','org','blue','logbook'],arrivals:['YKF Arrivals','activity','blue','arrivals'],
+ stack:['Stack','grid','green','stack'],pantry:['Pantry','grid','sunset','pantry']
+};
+const DK_KEY='crewmap:nature-dock-v7';
+let DOCK=load(DK_KEY,()=>['bots','routines','alerts','myapps']);
+if(!Array.isArray(DOCK)||DOCK.length!==4||DOCK.some(x=>!DOCK_APPS[x])||new Set(DOCK).size!==4)DOCK=['bots','routines','alerts','myapps'];
+function saveDock(){localStorage.setItem(DK_KEY,JSON.stringify(DOCK));render()}
+function dockIcon(id){const a=DOCK_APPS[id];return '<span class="aico nature-'+a[2]+'">'+ic(a[1],27)+'</span>'}
+function dockView(id){
+ const a=DOCK_APPS[id],k=a[3];
+ if(k==='schedule')return '<div class="notice">Schedule estimates, not verified task executions.</div>'+miniSchedule();
+ if(k==='alerts')return '<div class="notice"><b>Execution alerts are not connected.</b> Actual failures require a backend execution log. Feed freshness does not confirm run success.</div>';
+ if(k==='health')return '<div class="card"><h2>Data connection</h2><p>Live roster and message data only. Execution monitoring is not connected.</p><div class="kv"><span>Last fetch</span><b>'+esc(syncTxt())+'</b></div></div>';
+ if(k==='apps')return '<div class="notice">Connect external app URLs to enable direct shortcuts. Available Crew views are below.</div><div class="card"><h2>Crew</h2>'+['bots','routines','activity','depts','groups'].map(x=>'<button class="item" data-dock-open="'+x+'"><b>'+DOCK_APPS[x][0]+'</b><span class="chev">›</span></button>').join('')+'</div>';
+ const key={org:'org',activity:'activity',depts:'depts',groups:'groups',settings:'settings'}[k];
+ return key?APPV[key][1](): '<div class="notice"><b>'+esc(a[0])+' · Concept</b><p>Integration is not connected yet. This preview does not pretend to execute tasks or open external applications.</p></div>';
+}
+function openDock(id,rect){if(!DOCK_APPS[id])return;OV={kind:'dock',k:id};drawOV(rect)}
+function dockPicker(){
+ sheet('<h3>Customize Dock</h3><p class="muted">Choose four shortcuts. Use arrows to reorder, or replace any slot.</p><div class="dock-slots">'+DOCK.map((id,i)=>'<div class="dock-slot"><b>'+(i+1)+'</b>'+dockIcon(id)+'<strong>'+esc(DOCK_APPS[id][0])+'</strong><button data-dock-move="'+i+':-1" '+(i===0?'disabled':'')+'>‹</button><button data-dock-move="'+i+':1" '+(i===3?'disabled':'')+'>›</button><button data-dock-slot="'+i+'">Replace</button></div>').join('')+'</div><button class="btn ghost block" data-dock-default>Restore original four</button>',el=>{
+ el.querySelectorAll('[data-dock-move]').forEach(b=>b.onclick=()=>{const [i,d]=b.dataset.dockMove.split(':').map(Number),j=i+d;[DOCK[i],DOCK[j]]=[DOCK[j],DOCK[i]];saveDock();dockPicker()});
+ el.querySelectorAll('[data-dock-slot]').forEach(b=>b.onclick=()=>dockChoices(+b.dataset.dockSlot));
+ el.querySelector('[data-dock-default]').onclick=()=>{DOCK=['bots','routines','alerts','myapps'];saveDock();dockPicker()};
+ });
+}
+function dockChoices(slot){
+ sheet('<h3>Mini app library</h3><p class="muted">Replace slot '+(slot+1)+'. Each app can appear only once.</p><div class="dock-library">'+Object.entries(DOCK_APPS).map(([id,a])=>'<button class="dock-choice" data-dock-choose="'+id+'" '+(DOCK.includes(id)&&DOCK[slot]!==id?'disabled':'')+'>'+dockIcon(id)+'<span><b>'+esc(a[0])+'</b><small>'+(['tasks','chief','insights','logbook','arrivals','stack','pantry','briefing'].includes(id)?'Integration pending':'Crew view')+'</small></span></button>').join('')+'</div><button class="btn ghost block" data-dock-back>Back</button>',el=>{
+ el.querySelectorAll('[data-dock-choose]').forEach(b=>b.onclick=()=>{DOCK[slot]=b.dataset.dockChoose;saveDock();dockPicker()});
+ el.querySelector('[data-dock-back]').onclick=dockPicker;
+ });
+}
+
 let uidN=0;const nid=()=>'w'+Date.now().toString(36)+(uidN++);
 const DEF_LAYOUT=()=>({home:[['status','M'],['next','S'],['attention','S'],['orgmini','L']],org:[['grpsum','M'],['unassigned','S'],['bot:chief','S']],activity:[['msgs','M'],['net','L'],['topics','M']],depts:[],groups:[]});
 const AUTO=[];
@@ -378,7 +415,7 @@ function pageHTML([k,name],i){const list=LY[k]||[]; const sub=k==='home'?new Dat
  <button class="cc-workspace-trigger" data-workspace-open>${esc(WORKSPACE_NAMES[WS_ACTIVE])} <span>⌄</span></button><div class="wgrid">${list.filter(w=>W[w.t]&&(!w.t.startsWith('bot:')||inWorkspace(w.t.slice(4)))).map(w=>`<div class="w ${w.s}" data-wid="${w.id}" data-t="${esc(w.t)}" role="button" aria-label="${esc(W[w.t].n)}">${EDIT?`<button class="wx" data-x aria-label="Remove">×</button>${W[w.t].sz.length>1?`<button class="wsz" data-sz aria-label="Resize">${w.s}</button>`:''}`:''}<div class="wi">${W[w.t].r(w.s)}</div></div>`).join('')||`<div class="emptypg">${EDIT?'Tap + Add to put widgets here':'Press and hold to add widgets'}</div>`}</div></div></section>`}
 function render(){if(!R)return;syncDyn();syncLayout();const app=$('#app');
  app.innerHTML=`<div class="sb ${EDIT?'editing':''}" id="sb"><div class="track" id="track">${PAGES.map(pageHTML).join('')}</div></div>
- <div class="dockwrap"><div class="pdots">${PAGES.map((p,i)=>`<button data-pg="${i}" aria-label="${p[1]}" class="${i===SB.cur?'on':''}"><i></i></button>`).join('')}</div><nav class="dock" aria-label="Apps">${DOCK.map(k=>`<button data-app="${k}" aria-label="${APPV[k][0]}"><span class="aico">${ic(APPV[k][2],28)}</span><span>${APPV[k][0]}</span></button>`).join('')}</nav></div>`;
+ <div class="dockwrap"><button class="dock-edit" aria-label="Customize mini apps">Customize Dock ···</button><div class="pdots">${PAGES.map((p,i)=>`<button data-pg="${i}" aria-label="${p[1]}" class="${i===SB.cur?'on':''}"><i></i></button>`).join('')}</div><nav class="dock" aria-label="Apps">${DOCK.map(k=>`<button data-dock-app="${k}" aria-label="${esc(DOCK_APPS[k][0])}">${dockIcon(k)}<span>${esc(DOCK_APPS[k][0])}</span></button>`).join('')}</nav></div>`;
  metrics();go(SB.cur,false);bindSB()}
 function metrics(){
  const sb=$('#sb'),dw=$('.dockwrap'),gr=$('.page .wgrid');
@@ -395,8 +432,15 @@ function go(i,anim=true){SB.cur=Math.max(0,Math.min(SB.n-1,i));const t=$('#track
 function setEdit(on){if(EDIT&&!on){LY.custom=LY.custom||{};LY.custom[curKey()]=true;saveLY()}EDIT=on;render()}
 const curKey=()=>PAGES[SB.cur][0];
 function bindSB(){const sb=$('#sb'),track=$('#track');let st=null,lp=null;
- $$('.dock [data-app]').forEach(b=>b.onclick=()=>{if(EDIT)setEdit(false);openOV({kind:'app',k:b.dataset.app},b.querySelector('.aico').getBoundingClientRect())});
- $('.pdots [data-pg]').forEach(b=>b.onclick=()=>go(+b.dataset.pg));
+ $('.dock [data-dock-app]').forEach(b=>{
+ let t=null,held=false;
+ const cancel=()=>{clearTimeout(t);t=null};
+ b.addEventListener('pointerdown',()=>{held=false;cancel();t=setTimeout(()=>{held=true;navigator.vibrate?.(10);dockPicker()},520)});
+ ['pointerup','pointercancel','pointerleave'].forEach(ev=>b.addEventListener(ev,cancel));
+ b.onclick=()=>{if(held){held=false;return}if(EDIT)setEdit(false);openDock(b.dataset.dockApp,b.querySelector('.aico').getBoundingClientRect())};
+ });
+
+ $('.pdots [data-pg]').forEach(b=>b.onclick=()=>go(+b.dataset.pg)); $('.dock-edit').onclick=dockPicker;
  $('.cc-workspace-trigger').forEach(b=>b.onclick=workspacePicker);
  sb.querySelectorAll('[data-done]').forEach(b=>b.onclick=()=>setEdit(false));
  sb.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>gallery());
@@ -432,8 +476,8 @@ function gallery(){const k=curKey(),on=new Set(LY[k].map(w=>w.t));const keys=Obj
 
 
 /* ---------- overlay (apps + mini apps) ---------- */
-const ovTitle=()=>OV.kind==='app'?APPV[OV.k][0]:(W[OV.t]||{n:''}).n;
-function ovBody(){if(OV.kind==='app')return APPV[OV.k][1]();const w=W[OV.t];return w&&w.mini?w.mini():`<div class="card">${w?`<div class="wi">${w.r('M')}</div>`:''}</div>`}
+const ovTitle=()=>OV.kind==='dock'?DOCK_APPS[OV.k][0]:OV.kind==='app'?APPV[OV.k][0]:(W[OV.t]||{n:''}).n;
+function ovBody(){if(OV.kind==='dock')return dockView(OV.k);if(OV.kind==='app')return APPV[OV.k][1]();const w=W[OV.t];return w&&w.mini?w.mini():`<div class="card">${w?`<div class="wi">${w.r('M')}</div>`:''}</div>`}
 function drawOV(){let el=$('#ov');const fresh=!el;if(fresh){el=document.createElement('div');el.id='ov';el.className='ov';document.body.appendChild(el)}const sc=el.querySelector('.ovb')?.scrollTop||0;
  el.innerHTML=`<div class="ovh"><button class="back" data-close aria-label="Back to Home">‹ Home</button><b>${esc(ovTitle())}</b><span class="hsp"></span></div><div class="ovb"><div class="pin">${ovBody()}</div></div><div class="homebar" role="button" aria-label="Swipe up to go Home"><i></i></div>`;
  el.querySelector('.ovb').scrollTop=sc;postOV(el);if(fresh)bindOV(el)}
@@ -445,8 +489,8 @@ function closeOV(){const el=$('#ov');if(!el){OV=null;return}const was=OV;OV=null
  el.style.transition='transform .36s cubic-bezier(.3,.8,.3,1),border-radius .36s,opacity .36s';el.style.transform=`translate(${r.left-fr.left}px,${r.top-fr.top}px) scale(${r.width/VW()},${r.height/VH()})`;el.style.borderRadius='60px';el.style.opacity='0';
  document.body.classList.remove('ovopen');setTimeout(()=>el.remove(),360)}
 function bindOV(el){
- el.addEventListener('click',async e=>{const b=e.target.closest('[data-close],[data-open],[data-bot],[data-dept],[data-grp],[data-msg],[data-orgv],[data-actv],[data-cw],[data-mode],[data-editws],[data-resetlayout],[data-welcome]');if(!b)return;const d=b.dataset;const ovb=el.querySelector('.ovb');
-  if('close' in d)return closeOV();
+ el.addEventListener('click',async e=>{const b=e.target.closest('[data-close],[data-open],[data-bot],[data-dept],[data-grp],[data-msg],[data-orgv],[data-actv],[data-cw],[data-mode],[data-editws],[data-resetlayout],[data-welcome],[data-dock-open],[data-dock-settings]');if(!b)return;const d=b.dataset;const ovb=el.querySelector('.ovb');
+  if(d.dockSettings){dockPicker();return} if('close' in d)return closeOV(); if(d.dockOpen){openDock(d.dockOpen);return}
   if(d.open){OV={kind:'app',k:d.open};drawOV();ovb.scrollTop=0;return}
   if(d.bot){if(!isBot(d.bot))return;OV={kind:'mini',t:'bot:'+d.bot};drawOV();el.querySelector('.ovb').scrollTop=0;return}
   if(d.dept){OV={kind:'mini',t:'dept:'+d.dept};drawOV();el.querySelector('.ovb').scrollTop=0;return}
