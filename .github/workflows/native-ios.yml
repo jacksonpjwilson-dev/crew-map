@@ -1,0 +1,21 @@
+name: Native Crew
+on:
+  push:
+    paths: ['ios/**', '.github/workflows/native-ios.yml']
+  pull_request:
+    paths: ['ios/**', '.github/workflows/native-ios.yml']
+permissions:
+  contents: read
+jobs:
+  native:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test feed, scheduling, cache, health, and routing
+        run: swift test --package-path ios/CrewCore
+      - name: Install project generator
+        run: brew install xcodegen
+      - name: Generate Xcode project
+        run: cd ios && xcodegen generate
+      - name: Build iOS app and widgets without signing
+        run: xcodebuild -project ios/Crew.xcodeproj -scheme Crew -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build
