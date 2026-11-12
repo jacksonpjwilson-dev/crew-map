@@ -17,9 +17,11 @@ struct CrewRoot: View {
             NavigationStack { Automations() }.tabItem { Label("Automations", systemImage: "clock") }.tag("Automations")
         }.tint(accent == "Violet" ? .purple : accent == "Coral" ? .orange : .teal)
         .sheet(item: $store.selectedBot) { bot in NavigationStack { BotProfile(bot: bot).toolbar { Button("Done") { store.selectedBot = nil } } } }
-        .task { store.load(context); await store.workflowActivities.recover(); await store.sync() }
-        .onChange(of: phase) { _, value in if value == .active { Task { await store.sync() } } }
+        .onReceive(NotificationCenter.default.publisher(for: CrewIntentNavigation.notification)) { _ in consumeIntentRoute() }
+        .task { store.load(context); consumeIntentRoute(); await store.workflowActivities.recover(); await store.sync() }
+        .onChange(of: phase) { _, value in if value == .active { consumeIntentRoute(); Task { await store.sync() } } }
     }
+    private func consumeIntentRoute() { if let url = CrewIntentNavigation.consume() { store.route(url) } }
 }
 struct Overview: View {
     @Environment(CrewStore.self) private var store

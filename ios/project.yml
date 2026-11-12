@@ -77,8 +77,24 @@ targets:
         CFBundleDisplayName: Crew
         WKApplication: true
         WKCompanionAppBundleIdentifier: dev.jacksonwilson.crew
+  CrewUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [CrewUITests]
+    dependencies:
+      - target: Crew
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.jacksonwilson.crew.uitests
+        GENERATE_INFOPLIST_FILE: YES
 schemes:
   Crew:
     build:
       targets:
         Crew: all
+    test:
+      targets: [CrewUITests]
+  CrewWatch:
+    build:
+      targets:
+        CrewWatch: all

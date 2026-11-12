@@ -4,3 +4,4 @@ Generated/
 *.xcodeproj/
 DerivedData/
 !CrewCore/Tests/CrewCoreTests/Fixtures/activity.json
+*.xcresult/

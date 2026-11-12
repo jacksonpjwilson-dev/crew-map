@@ -4,18 +4,49 @@ on:
     paths: ['ios/**', '.github/workflows/native-ios.yml']
   pull_request:
     paths: ['ios/**', '.github/workflows/native-ios.yml']
+  workflow_dispatch:
 permissions:
   contents: read
+concurrency:
+  group: native-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   native:
     runs-on: macos-15
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+      - name: Toolchain versions
+        run: xcodebuild -version && swift --version
       - name: Test feed, scheduling, cache, health, and routing
         run: swift test --package-path ios/CrewCore
       - name: Install project generator
         run: brew install xcodegen
       - name: Generate Xcode project
         run: cd ios && xcodegen generate
-      - name: Build iOS app and widgets without signing
-        run: xcodebuild -project ios/Crew.xcodeproj -scheme Crew -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build
+      - name: Build iOS app and embedded extensions without signing
+        run: xcodebuild -project ios/Crew.xcodeproj -scheme Crew -destination 'generic/platform=iOS Simulator' -derivedDataPath ios/DerivedData CODE_SIGNING_ALLOWED=NO build
+      - name: Build Watch companion for its own simulator SDK
+        run: xcodebuild -project ios/Crew.xcodeproj -scheme CrewWatch -destination 'generic/platform=watchOS Simulator' -derivedDataPath ios/DerivedData CODE_SIGNING_ALLOWED=NO build
+      - name: Select an installed iPhone simulator
+        id: simulator
+        run: |
+          xcrun simctl list devices available --json > /tmp/crew-simulators.json
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          with open('/tmp/crew-simulators.json') as f:
+              devices = json.load(f)['devices']
+          phones = [d for runtime, entries in devices.items() if '.iOS-' in runtime for d in entries if 'iPhone' in d['name'] and d['isAvailable']]
+          if not phones:
+              raise SystemExit('No installed iPhone simulator runtime found')
+          print('id=' + phones[0]['udid'])
+          PY
+      - name: Launch and test native navigation on iPhone simulator
+        run: xcodebuild -project ios/Crew.xcodeproj -scheme Crew -destination 'platform=iOS Simulator,id=${{ steps.simulator.outputs.id }}' -derivedDataPath ios/DerivedData -resultBundlePath ios/SimulatorResults.xcresult CODE_SIGNING_ALLOWED=NO test
+      - name: Upload simulator test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: crew-simulator-results
+          path: ios/SimulatorResults.xcresult
+          if-no-files-found: ignore
