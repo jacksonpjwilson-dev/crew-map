@@ -1,4 +1,6 @@
-# Implementation and completion report
+# Initial implementation inventory (2026-11-11)
+
+For subsequent Apple build corrections and actual CI/simulator results, see [first build status](FIRST_BUILD.md). The original findings below describe the initial implementation session.
 
 This is an implemented native read-only vertical slice plus extension/integration foundations. It is not a production-complete implementation of every requested phase. Apple UI targets have not been typechecked or run in Xcode in this Linux session; they require the macOS build gate before use/release.
 
